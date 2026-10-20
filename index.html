@@ -708,7 +708,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '4.9.0';
+var APP_VERSION = '4.9.1';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -826,7 +826,9 @@ var Sync = {
   init: function () {
     var s = lsGet(LS.sync, {}); this.cfg = s.cfg || null; this.room = s.room || ''; this.clave = s.clave || ''; this.manualOff = !!s.manualOff;
     var auto = window.SYNC_CLAVE ? String(window.SYNC_CLAVE) : '';
-    if (!this.room && !this.manualOff && norm(auto).length >= 6) { this.clave = auto; this.room = roomFromClave(auto); this.save(); }
+    this.fixed = norm(auto).length >= 6;
+    // Clave fija en config.js: TODOS los dispositivos usan la misma lista, siempre
+    if (this.fixed) { this.clave = auto; this.room = roomFromClave(auto); this.manualOff = false; this.save(); }
   },
   effCfg: function () { return this.cfg || (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey ? window.FIREBASE_CONFIG : null); },
   save: function () { lsSet(LS.sync, { cfg: this.cfg, room: this.room, clave: this.clave, manualOff: !!this.manualOff }); },
@@ -1058,7 +1060,9 @@ function renderSyncUI() {
   $('btnConnect').hidden = on && Sync.state !== 'error' && Sync.state !== 'off' && Sync.state !== 'connecting';
   $('btnConnect').textContent = on && (Sync.state === 'error' || Sync.state === 'connecting') ? '🔄 Reintentar' : '🔗 Conectar';
   $('btnDisconnect').hidden = !Sync.room;
-  $('inpClave').disabled = !!Sync.room && Sync.state !== 'error';
+  $('inpClave').disabled = Sync.fixed || (!!Sync.room && Sync.state !== 'error');
+  $('btnGenRoom').hidden = !!Sync.fixed;
+  if (Sync.fixed) $('btnDisconnect').hidden = true;
   if (Sync.room && document.activeElement !== $('inpClave')) $('inpClave').value = Sync.clave || Sync.room;
   var err = $('syncErr');
   err.hidden = !(Sync.state === 'error' || (Sync.state === 'offline' && Sync.msg));

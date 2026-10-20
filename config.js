@@ -33,8 +33,9 @@ window.FIREBASE_CONFIG = {
   appId: "1:435884902168:web:61e6f2f59934af694a006d"
 };
 
-// Clave del equipo: con esto todos los dispositivos se conectan solos.
-window.SYNC_CLAVE = 'roca-colabora-4303';
+// Clave del equipo (FIJA): todos los dispositivos usan esta misma lista.
+// Es la clave que ya usa tu celular. No la cambies o se separan las listas.
+window.SYNC_CLAVE = 'camino-camino-3381';
 
 // Nombre de la base de datos Firestore (en tu proyecto se llama "default")
 window.FIRESTORE_DB_ID = 'default';
