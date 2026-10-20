@@ -145,6 +145,20 @@ body.paid-mode #btnFilter,body.paid-mode #filterPanel{display:none!important}
 #tab3 .sub-btn{text-align:center}
 @media (max-width:700px){ .tbl th,.tbl td{padding:9px 8px;font-size:.84rem} .tbl td.nm{max-width:150px} }
 
+/* CUENTA */
+.btn-google{background:#fff;color:#1f2937;border-color:#fff;width:100%;font-size:1rem;padding:13px}
+.btn-google .g{font-weight:900;color:#4285f4;font-size:1.15rem;margin-right:4px}
+.acc-row{display:flex;align-items:center;gap:12px}
+.acc-row img{width:44px;height:44px;border-radius:50%;background:#334155;flex:none;object-fit:cover}
+.acc-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.acc-txt span{font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.acc-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+.acc-item:last-child{border-bottom:0}
+.acc-item small{display:block;color:var(--muted)}
+.acc-item code{font-family:ui-monospace,Consolas,monospace;font-weight:700;color:#93c5fd}
+.login-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--primary);background:rgba(59,130,246,.14);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.88rem}
+body:not([data-tab="0"]) .login-bar{display:none!important}
+
 /* DIAGNÓSTICO */
 .diag{border:1px solid var(--border);border-radius:12px;padding:12px;margin:12px 0}
 .diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
@@ -388,6 +402,10 @@ select option{background:#0f172a;color:var(--text)}
     </div>
   </header>
 
+  <div class="login-bar" id="loginBar" hidden>
+    <span>👤 Entra con tu Gmail para guardar tus datos en tu cuenta y verlos en tus otros dispositivos.</span>
+    <button type="button" class="btn btn-sm btn-primary" id="btnLoginBar">Entrar</button>
+  </div>
   <div class="cloud-bar" id="cloudBar" hidden>
     <span>☁ <b id="cloudN">0</b> registros están solo en este dispositivo.</span>
     <button type="button" class="btn btn-sm btn-primary" id="btnCloudUp">Enviar ahora</button>
@@ -575,36 +593,49 @@ select option{background:#0f172a;color:var(--text)}
   <!-- 5: AJUSTES -->
   <section id="tab5" class="panel">
     <div class="card">
-      <div class="card-h"><h2>🔄 Sincronizar dispositivos</h2><button type="button" class="sync-chip" id="syncChip2" data-state="off"><span class="dot"></span><span class="txt">Solo este dispositivo</span></button></div>
-      <p class="muted small" style="margin-bottom:12px">Los datos siempre quedan guardados en la memoria de este dispositivo y la app funciona sin internet. Con la sincronización activa, cada cambio llega por internet en segundos a los otros celulares o PCs que usen la misma clave, estén donde estén; si no hay señal, se envía solo al volver la conexión.</p>
+      <div class="card-h"><h2>👤 Cuenta y sincronización</h2><button type="button" class="sync-chip" id="syncChip2" data-state="off"><span class="dot"></span><span class="txt">Solo este dispositivo</span></button></div>
 
-      <details id="cfgDetails">
-        <summary>Paso 1 · Configuración de Firebase <span id="cfgState" class="small"></span></summary>
-        <ol class="steps">
-          <li>Entra a <b>console.firebase.google.com</b> y crea un proyecto (gratis).</li>
-          <li><b>Authentication</b> → Comenzar → activa <b>Anónimo</b> y <b>Correo electrónico/contraseña</b>. En <b>Usuarios</b> agrega el usuario editor (ver README).</li>
-          <li><b>Firestore Database</b> → Crear base de datos → en <b>Reglas</b> pega las del archivo <span class="code">firestore.rules</span>.</li>
-          <li>Configuración del proyecto → Tus apps → <b>Web (&lt;/&gt;)</b> → copia el bloque <span class="code">firebaseConfig</span> y pégalo aquí.</li>
-        </ol>
-        <textarea id="inpCfg" rows="6" placeholder='const firebaseConfig = {&#10;  apiKey: "...",&#10;  authDomain: "...",&#10;  projectId: "...",&#10;  appId: "..."&#10;};'></textarea>
-        <div class="actions">
-          <button type="button" class="btn btn-primary" id="btnSaveCfg">Guardar configuración</button>
-          <button type="button" class="btn" id="btnClearCfg">Quitar</button>
+      <div id="accOut">
+        <p class="muted small" style="margin-bottom:12px">Entra con tu cuenta de <b>Gmail</b>. Tus datos se guardan en tu cuenta: solo tú y las personas que tú invites pueden verlos. Entra con el mismo Gmail en tu celular y en tu PC para tener la misma lista.</p>
+        <button type="button" class="btn btn-google" id="btnGoogle"><span class="g">G</span> Entrar con Google</button>
+      </div>
+
+      <div id="accIn" hidden>
+        <div class="acc-row">
+          <img id="accPhoto" alt="" referrerpolicy="no-referrer" />
+          <div class="acc-txt"><b id="accName"></b><span id="accEmail"></span></div>
+          <button type="button" class="btn btn-sm" id="btnSignOut">Salir</button>
         </div>
-      </details>
+        <div class="field" style="margin-top:12px">
+          <label for="selList">Lista que estás usando</label>
+          <select id="selList"></select>
+        </div>
 
-      <div class="field">
-        <label for="inpClave">Paso 2 · Clave del equipo (la misma en todos los dispositivos)</label>
+        <div id="ownBox">
+          <h3>👥 Invitar a alguien a tu lista</h3>
+          <p class="muted small">Crea un <b>código temporal</b>. La persona entra con su propio Gmail, escribe el código y podrá ver y registrar en tu lista hasta que venza. Tú puedes quitarle el acceso cuando quieras.</p>
+          <div class="date-ctrl" style="margin-top:8px">
+            <select id="selInvDur"><option value="2">Vence en 2 horas</option><option value="24" selected>Vence en 1 día</option><option value="168">Vence en 7 días</option><option value="720">Vence en 30 días</option></select>
+            <button type="button" class="btn btn-green" id="btnCreateInv">Crear código</button>
+          </div>
+          <div id="invNew" hidden>
+            <div class="room-big" id="invCode"></div>
+            <p class="muted small" style="text-align:center" id="invExp"></p>
+            <div class="actions">
+              <button type="button" class="btn btn-green grow" id="btnShareInv">📤 Enviar (WhatsApp…)</button>
+              <button type="button" class="btn grow" id="btnCopyInv">📋 Copiar</button>
+            </div>
+          </div>
+          <div id="accessList" style="margin-top:12px"></div>
+        </div>
+
+        <h3>🔑 Unirme a la lista de otra persona</h3>
         <div class="date-ctrl">
-          <input type="text" id="inpClave" placeholder="Ej. maraton-cegic-2026" spellcheck="false" autocapitalize="none" autocomplete="off" />
-          <button type="button" class="btn" id="btnGenRoom">Generar</button>
+          <input type="text" id="inpJoin" placeholder="Código, ej. 7KQ-4MX2" autocapitalize="characters" spellcheck="false" autocomplete="off" />
+          <button type="button" class="btn" id="btnJoin">Unirme</button>
         </div>
-        <p class="muted small">Mínimo 6 caracteres. No importan mayúsculas ni tildes. Elige una que solo sepa tu equipo.</p>
       </div>
-      <div class="actions">
-        <button type="button" class="btn btn-green grow" id="btnConnect">🔗 Conectar</button>
-        <button type="button" class="btn btn-danger" id="btnDisconnect" hidden>Desconectar</button>
-      </div>
+
       <p class="err" id="syncErr" hidden></p>
       <div class="diag" id="diagBox">
         <div class="diag-grid">
@@ -621,21 +652,14 @@ select option{background:#0f172a;color:var(--text)}
       </div>
       <p class="err" id="fileWarn" hidden>⚠ Estás abriendo la app como archivo de la computadora. Para sincronizar ábrela desde su enlace de internet (GitHub Pages).</p>
 
-      <div id="linkBox" hidden>
-        <h3>🌎 Agregar otro dispositivo (desde cualquier lugar)</h3>
-        <p class="muted small">Los datos viajan por internet: el otro celular o PC puede estar en otra casa, otra ciudad u otro país. Solo tiene que:</p>
-        <ol class="steps" style="margin-top:6px">
-          <li>Abrir la app en <b id="appUrl"></b> (o instalarla).</li>
-          <li>Ir a <b>Ajustes</b> y escribir la clave del equipo:</li>
-        </ol>
-        <div class="room-big" id="roomBig"></div>
-        <p class="muted small" style="text-align:center">…y tocar <b>Conectar</b>. En segundos le aparece toda la lista.</p>
+      <details id="cfgDetails">
+        <summary>Configuración de Firebase <span id="cfgState" class="small"></span></summary>
+        <textarea id="inpCfg" rows="6" placeholder='const firebaseConfig = {&#10;  apiKey: "...",&#10;  authDomain: "...",&#10;  projectId: "...",&#10;  appId: "..."&#10;};'></textarea>
         <div class="actions">
-          <button type="button" class="btn btn-green grow" id="btnShareLink">📤 Enviar invitación (WhatsApp…)</button>
-          <button type="button" class="btn grow" id="btnCopyLink">📋 Copiar invitación</button>
+          <button type="button" class="btn btn-primary" id="btnSaveCfg">Guardar configuración</button>
+          <button type="button" class="btn" id="btnClearCfg">Quitar</button>
         </div>
-        <p class="muted small" style="margin-top:8px">La invitación lleva un enlace que conecta solo al abrirlo. ⚠ Compártela solo con tu equipo: quien tenga la clave puede ver y editar la lista.</p>
-      </div>
+      </details>
     </div>
 
     <div class="card">
@@ -708,7 +732,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '4.9.1';
+var APP_VERSION = '5.0.0';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -784,7 +808,20 @@ function normalizeRecord(r) {
     paid: !!r.paid, createdAt: created, updatedAt: Number(r.updatedAt) || created, deleted: !!r.deleted
   };
 }
+var curKey = LS.data;          // cada lista guarda sus datos aparte en este dispositivo
+function dataKey(listId) { return listId ? 'COLAB_V5_DATA_' + listId : LS.data; }
+function useLocalList(listId, ownUid) {
+  var key = dataKey(listId);
+  if (key === curKey) return;
+  var stored = lsGet(key, null);
+  if (!stored && listId && listId === ownUid && !lsGet('COLAB_V5_MIGRATED', false)) {   // primera vez: lo que ya tenías pasa a tu cuenta
+    stored = lsGet(LS.data, {}); lsSet('COLAB_V5_MIGRATED', true);
+  }
+  DB = (stored && typeof stored === 'object') ? stored : {}; curKey = key; saveLocal();
+}
 function loadLocal() {
+  var sv = lsGet(LS.sync, {});
+  if (sv.listId && lsGet(dataKey(sv.listId), null)) { curKey = dataKey(sv.listId); DB = lsGet(curKey, {}); extraNames = lsGet(LS.names, []); if (!Array.isArray(extraNames)) extraNames = []; return; }
   var stored = lsGet(LS.data, null);
   if (stored && typeof stored === 'object') { DB = stored; }
   else {
@@ -800,7 +837,7 @@ function loadLocal() {
 }
 var askedPersist = false;
 function saveLocal() {
-  lsSet(LS.data, DB);
+  lsSet(curKey, DB);
   if (!askedPersist && navigator.storage && navigator.storage.persist) { askedPersist = true; navigator.storage.persist().catch(function () {}); }
 }
 function activeRecs() { var out = []; for (var k in DB) if (!DB[k].deleted) out.push(DB[k]); return out; }
@@ -819,84 +856,120 @@ function commit(recs) {            // guarda local + envía a la nube
 }
 function removeRec(id) { var r = DB[id]; if (!r) return; var c = Object.assign({}, r, { deleted: true }); commit([c]); }
 
-/* ===================== SINCRONIZACIÓN (Firebase Firestore) ===================== */
+/* ===================== SINCRONIZACIÓN (Firebase + cuentas de Google) =====================
+   Datos:   lists/{dueño}/records/{id}           → la lista de cada cuenta
+            lists/{dueño}/members/{uid}          → personas invitadas (con fecha de vencimiento)
+            invites/{código}                      → códigos temporales de invitación
+            users/{uid}/joined/{dueño}            → listas a las que me uní
+   Las reglas de Firestore (firestore.rules) hacen que nadie pueda leer la lista de otro. */
 var Sync = {
-  state: 'off', msg: '', cfg: null, room: '', fs: null, db: null, col: null, unsub: null,
-  ready: false, reconciled: false, starting: null, appCfgKey: '', clave: '',
-  init: function () {
-    var s = lsGet(LS.sync, {}); this.cfg = s.cfg || null; this.room = s.room || ''; this.clave = s.clave || ''; this.manualOff = !!s.manualOff;
-    var auto = window.SYNC_CLAVE ? String(window.SYNC_CLAVE) : '';
-    this.fixed = norm(auto).length >= 6;
-    // Clave fija en config.js: TODOS los dispositivos usan la misma lista, siempre
-    if (this.fixed) { this.clave = auto; this.room = roomFromClave(auto); this.manualOff = false; this.save(); }
-  },
+  state: 'off', msg: '', cfg: null, fs: null, db: null, col: null, unsub: null, ready: false, starting: null, appCfgKey: '',
+  user: null, listId: '', lists: [],
+  init: function () { var s = lsGet(LS.sync, {}); this.cfg = s.cfg || null; this.listId = s.listId || ''; },
   effCfg: function () { return this.cfg || (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey ? window.FIREBASE_CONFIG : null); },
-  save: function () { lsSet(LS.sync, { cfg: this.cfg, room: this.room, clave: this.clave, manualOff: !!this.manualOff }); },
+  save: function () { lsSet(LS.sync, { cfg: this.cfg, listId: this.listId }); },
   setState: function (st, msg) { this.state = st; this.msg = msg || ''; renderSyncUI(); },
+  load: async function () {
+    if (this.fs) return;
+    var cfg = this.effCfg(); if (!cfg) throw new Error('Falta la configuración de Firebase');
+    var base = 'https://www.gstatic.com/firebasejs/' + FIREBASE_SDK + '/';
+    var mods = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+    var appM = mods[0], authM = mods[1], fsM = mods[2];
+    var app = appM.initializeApp(cfg), db;
+    var dbId = window.FIRESTORE_DB_ID || '(default)';
+    this.dbId = dbId;
+    try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true, localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }, dbId); }
+    catch (e) { try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }, dbId); } catch (e2) { db = fsM.getFirestore(app, dbId); } }
+    this.fs = fsM; this.db = db; this.authM = authM; this.auth = authM.getAuth(app); this.appCfgKey = cfg.projectId + '|' + cfg.apiKey;
+  },
   start: function () {
     var self = this;
-    var cfg = this.effCfg();
-    if (!cfg || !this.room) { this.setState('off'); return Promise.resolve(); }
+    if (!this.effCfg()) { this.setState('off'); return Promise.resolve(); }
     if (this.starting) return this.starting;
-    var key = cfg.projectId + '|' + cfg.apiKey;
-    if (this.fs && this.appCfgKey !== key) { toast('Reiniciando para aplicar la nueva configuración…'); setTimeout(function () { location.reload(); }, 900); return Promise.resolve(); }
     this.setState('connecting');
     this.starting = (async function () {
       try {
-        if (!self.fs) {
-          var base = 'https://www.gstatic.com/firebasejs/' + FIREBASE_SDK + '/';
-          var mods = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
-          var appM = mods[0], authM = mods[1], fsM = mods[2];
-          var app = appM.initializeApp(cfg);
-          var db;
-          var dbId = window.FIRESTORE_DB_ID || lsGet('COLAB_V4_DBID', '') || '(default)';
-          if (window.FIRESTORE_DB_ID) { try { localStorage.removeItem('COLAB_V4_DBID'); localStorage.removeItem('COLAB_V4_DBID_TRIED'); } catch (e) {} }
-          self.dbId = dbId;
-          try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true, localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }, dbId); }
-          catch (e) { try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }, dbId); } catch (e2) { db = fsM.getFirestore(app, dbId); } }
-          self.fs = fsM; self.db = db; self.authM = authM; self.auth = authM.getAuth(app); self.appCfgKey = key;
-        }
+        await self.load();
+        try { await self.authM.getRedirectResult(self.auth); } catch (e) { console.warn(e); }
         if (self.auth.authStateReady) await self.auth.authStateReady();
-        if (!self.auth.currentUser) await self.authM.signInAnonymously(self.auth);
-        self.listen();
-        if (self.pendingPw) self.signInEditor(self.pendingPw);
+        var u = self.auth.currentUser;
+        if (u && u.isAnonymous) { await self.authM.signOut(self.auth); u = null; }   // las sesiones anónimas viejas ya no sirven
+        if (!u) { self.user = null; self.setState('login'); renderAccount(); return; }
+        await self.onUser(u);
       } catch (e) {
         console.error(e);
-        if (!navigator.onLine || /network/i.test(String(e && (e.code || e.message)))) self.setState('offline', 'Sin conexión: se conectará al volver el internet.');
+        if (!navigator.onLine || /network|Failed to fetch|dynamically imported/i.test(String(e && (e.code || e.message)))) self.setState('offline', 'Sin conexión: se conectará al volver el internet.');
         else self.setState('error', humanErr(e));
       } finally { self.starting = null; }
     })();
     return this.starting;
   },
+  signIn: async function () {
+    await this.load();
+    var p = new this.authM.GoogleAuthProvider(); p.setCustomParameters({ prompt: 'select_account' });
+    try {
+      var res = await this.authM.signInWithPopup(this.auth, p);
+      await this.onUser(res.user);
+    } catch (e) {
+      var c = String(e && e.code);
+      if (/popup-blocked|operation-not-supported|web-storage/i.test(c)) { await this.authM.signInWithRedirect(this.auth, p); return; }
+      if (/popup-closed|cancelled-popup/i.test(c)) return;
+      throw e;
+    }
+  },
+  signOut: async function () {
+    if (this.unsub) this.unsub();
+    this.unsub = null; this.ready = false; this.col = null; this.user = null; this.lists = [];
+    try { await this.authM.signOut(this.auth); } catch (e) {}
+    this.setState('login'); renderAccount();
+  },
+  onUser: async function (u) {
+    var fs = this.fs, self = this;
+    this.user = u;
+    fs.setDoc(fs.doc(this.db, 'lists', u.uid), { ownerEmail: u.email || '', ownerName: u.displayName || '', updatedAt: Date.now() }, { merge: true }).catch(function (e) { console.warn(e); });
+    var pend = pendingInvite();
+    if (pend) { try { await this.joinCode(pend, true); } catch (e) { toast('✖ ' + (e.message || humanErr(e)), 'err'); } clearPendingInvite(); }
+    await this.loadLists();
+    var target = this.lists.some(function (l) { return l.id === self.listId; }) ? this.listId : u.uid;
+    this.switchList(target);
+  },
+  loadLists: async function () {
+    var fs = this.fs, u = this.user, out = [{ id: u.uid, email: u.email, own: true }];
+    try {
+      var js = await fs.getDocs(fs.collection(this.db, 'users', u.uid, 'joined'));
+      js.docs.forEach(function (d) { var x = d.data(); if ((x.expiresAt || 0) > Date.now()) out.push({ id: d.id, email: x.ownerEmail || 'otra cuenta', expiresAt: x.expiresAt }); });
+    } catch (e) { console.warn(e); }
+    this.lists = out; renderAccount();
+  },
+  isOwnList: function () { return !!(this.user && this.listId === this.user.uid); },
+  switchList: function (id) {
+    if (this.unsub) this.unsub();
+    this.unsub = null; this.listId = id; this.save();
+    this.sent = {}; this.cloudCount = null; this.pendingCount = 0;
+    useLocalList(id, this.user && this.user.uid);
+    this.listen(); renderAccount(); scheduleRefresh();
+  },
   listen: function () {
     var self = this, fs = this.fs;
+    if (!this.user || !this.listId) return;
     if (this.unsub) this.unsub();
-    this.reconciled = false;
-    this.col = fs.collection(this.db, 'rooms', this.room, 'records');
-    this.ready = true;
+    this.col = fs.collection(this.db, 'lists', this.listId, 'records');
+    this.ready = true; this.checkedOnce = false;
     clearTimeout(this.diagTimer);
-    this.diagTimer = setTimeout(function () { self.diagnose(); }, 12000);   // si no conecta en 12 s, averigua por qué
-    this.unsub = fs.onSnapshot(this.col, { includeMetadataChanges: true }, function (snap) { self.onSnap(snap); },
-      function (err) { console.error(err); self.ready = false; self.unsub = null; self.setState('error', humanErr(err)); });
+    this.diagTimer = setTimeout(function () { self.diagnose(); }, 12000);
+    this.unsub = fs.onSnapshot(this.col, { includeMetadataChanges: true }, function (snap) { self.onSnap(snap); }, function (err) {
+      console.error(err); self.ready = false; self.unsub = null;
+      if (self.lostAccess(err)) return;
+      self.setState('error', humanErr(err));
+    });
   },
   diagnose: function () {
     var self = this, fs = this.fs;
     if (!fs || !this.col || this.state === 'synced' || this.state === 'pending') return;
     if (!navigator.onLine) { this.setState('offline', 'Sin internet: se conectará al volver la conexión.'); return; }
     var timer = new Promise(function (_, rej) { setTimeout(function () { rej({ code: 'timeout' }); }, 12000); });
-    Promise.race([fs.getDocsFromServer(fs.query(this.col, fs.limit(1))), timer]).then(function () {
-      self.setState('synced');
-    }).catch(function (e) {
-      console.error('diagnóstico', e);
-      // Si la base se creó con el nombre "default" (sin paréntesis), probar con ese nombre una vez
-      var other = self.dbId === '(default)' ? 'default' : '(default)';
-      if (!window.FIRESTORE_DB_ID && /not-found|not exist|unavailable|timeout/i.test(String(e && (e.code || e.message))) && !lsGet('COLAB_V4_DBID_TRIED', false)) {
-        lsSet('COLAB_V4_DBID_TRIED', true); lsSet('COLAB_V4_DBID', other); location.reload(); return;
-      }
-      self.setState('error', e && e.code === 'timeout'
-        ? 'Firebase no responde. Revisa: 1) que creaste "Firestore Database" (no Realtime Database), 2) tu conexión a internet o antivirus. Luego toca Conectar.'
-        : humanErr(e));
-    });
+    Promise.race([fs.getDocsFromServer(fs.query(this.col, fs.limit(1))), timer]).then(function () { self.setState('synced'); })
+      .catch(function (e) { self.setState('error', e && e.code === 'timeout' ? 'Firebase no responde. Revisa tu conexión a internet y toca Comprobar.' : humanErr(e)); });
   },
   onSnap: function (snap) {
     var changed = false;
@@ -909,15 +982,9 @@ var Sync = {
       if (!l || r.updatedAt > (l.updatedAt || 0)) { DB[r.id] = r; changed = true; }
     });
     if (!snap.metadata.fromCache) {   // cada respuesta del servidor: revisar la memoria y enviar lo que falte o sea más nuevo
-      this.reconciled = true;
-      var remote = {};
+      var remote = {}, up = [], sent = this.sent || (this.sent = {});
       snap.docs.forEach(function (d) { remote[d.id] = Number(d.data().updatedAt) || 0; });
-      var up = [];
-      var sent = this.sent || (this.sent = {});
-      for (var k in DB) {
-        var mine = DB[k].updatedAt || 0;
-        if ((!(k in remote) || mine > remote[k]) && sent[k] !== mine) { up.push(DB[k]); sent[k] = mine; }
-      }
+      for (var k in DB) { var mine = DB[k].updatedAt || 0; if ((!(k in remote) || mine > remote[k]) && sent[k] !== mine) { up.push(DB[k]); sent[k] = mine; } }
       this.pendingCount = up.length; updateCloudBar();
       if (up.length) this.push(up);
     }
@@ -925,50 +992,38 @@ var Sync = {
     if (!navigator.onLine || snap.metadata.fromCache) this.setState(snap.metadata.hasPendingWrites ? 'offline' : (navigator.onLine ? 'connecting' : 'offline'));
     else { this.setState(snap.metadata.hasPendingWrites ? 'pending' : 'synced'); if (!this.checkedOnce) { this.checkedOnce = true; runCheck(true); } }
   },
-  /* Solo el usuario editor (contraseña de edición) puede escribir en la nube; los demás solo ven */
-  isEditor: function () { var u = this.auth && this.auth.currentUser; return !!(u && !u.isAnonymous); },
-  signInEditor: async function (pw) {
-    var email = String(window.EDITOR_EMAIL || '').trim();
-    if (!email) return;
-    if (!this.auth) { this.pendingPw = pw; return; }                       // Firebase aún cargando: se hace al terminar
-    if (this.isEditor()) { this.pendingPw = null; return; }
-    try {
-      await this.authM.signInWithEmailAndPassword(this.auth, email, pw);
-      this.pendingPw = null;
-      this.listen();                                                       // vuelve a revisar y sube lo pendiente
-      toast('☁ Editor conectado: subiendo tus registros a la nube…'); updateCloudBar();
-    } catch (e) {
-      var c = String(e && (e.code || e.message));
-      if (/network/i.test(c) || !navigator.onLine) { this.pendingPw = pw; this.setState('offline', 'Sin internet: los cambios se subirán al volver la conexión.'); }
-      else { this.pendingPw = null; this.setState('error', /invalid-credential|wrong-password|user-not-found|invalid-login/i.test(c) ? 'La nube no aceptó la contraseña. En Firebase → Authentication → Usuarios, el usuario ' + email + ' debe tener la contraseña de edición.' : humanErr(e)); }
-    }
+  lostAccess: function (err) {   // si me quitaron el acceso a la lista de otra persona, volver a la mía
+    if (!/permission-denied|denied/i.test(String(err && (err.code || err.message))) || !this.user || this.listId === this.user.uid) return false;
+    var self = this;
+    toast('🔒 Tu acceso a esa lista venció o fue retirado', 'err');
+    this.loadLists().then(function () { self.switchList(self.user.uid); });
+    return true;
   },
+  docData: function (r) { return { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted }; },
   push: function (recs) {
     if (!this.ready || !this.col || !recs.length) return;
     var fs = this.fs, self = this;
     for (var i = 0; i < recs.length; i += 400) {
       var b = fs.writeBatch(this.db);
-      recs.slice(i, i + 400).forEach(function (r) {
-        b.set(fs.doc(self.col, r.id), { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted });
-      });
+      recs.slice(i, i + 400).forEach(function (r) { b.set(fs.doc(self.col, r.id), self.docData(r)); });
       b.commit().then(function () { runCheck(true); })
-        .catch(function (e) { console.error(e); self.sent = {}; self.setState('error', humanErr(e)); updateCloudBar(); });
+        .catch(function (e) { console.error(e); self.sent = {}; if (self.lostAccess(e)) return; self.setState('error', humanErr(e)); updateCloudBar(); });
     }
   },
-  /* Envía TODO lo que tiene este dispositivo y espera confirmación del servidor */
   sendAll: async function () {
-    if (!this.ready || !this.col) { await this.start(); }
-    if (!this.ready || !this.col) throw new Error('Sin conexión con la nube');
-    var fs = this.fs, recs = Object.keys(DB).map(function (k) { return DB[k]; }), done = 0;
+    if (!this.user) throw new Error('Primero entra con tu cuenta de Google');
+    if (!this.ready || !this.col) this.listen();
+    var fs = this.fs, self = this, recs = Object.keys(DB).map(function (k) { return DB[k]; }), done = 0;
     for (var i = 0; i < recs.length; i += 400) {
-      var b = fs.writeBatch(this.db), part = recs.slice(i, i + 400), self = this;
-      part.forEach(function (r) { b.set(fs.doc(self.col, r.id), { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted }); });
+      var b = fs.writeBatch(this.db), part = recs.slice(i, i + 400);
+      part.forEach(function (r) { b.set(fs.doc(self.col, r.id), self.docData(r)); });
       await Promise.race([b.commit(), new Promise(function (_, rej) { setTimeout(function () { rej({ code: 'timeout' }); }, 20000); })]);
       done += part.length;
     }
     return done;
   },
   check: async function () {
+    if (!this.user) throw new Error('Primero entra con tu cuenta de Google');
     if (!this.ready || !this.col) throw new Error('Sin conexión con la nube');
     var r = await this.fs.getDocsFromServer(this.col), rem = {}, live = 0;
     r.docs.forEach(function (d) { var x = d.data(); rem[d.id] = Number(x.updatedAt) || 0; if (!x.deleted) live++; });
@@ -976,43 +1031,83 @@ var Sync = {
     this.cloudCount = live; this.pendingCount = pend; updateCloudBar();
     return { cloud: live, pend: pend };
   },
-  stop: function () {
-    if (this.unsub) this.unsub();
-    this.unsub = null; this.ready = false; this.col = null; this.room = ''; this.clave = ''; this.save(); this.setState('off');
+  /* ---- Invitaciones temporales ---- */
+  createInvite: async function (hours) {
+    var fs = this.fs, u = this.user, code = genCode(), exp = Date.now() + hours * 3600e3;
+    await fs.setDoc(fs.doc(this.db, 'invites', code), { owner: u.uid, ownerEmail: u.email || '', expiresAt: exp, createdAt: Date.now() });
+    return { code: code, expiresAt: exp };
+  },
+  accessData: async function () {
+    var fs = this.fs, u = this.user, inv = [], mem = [];
+    try { var a = await fs.getDocs(fs.query(fs.collection(this.db, 'invites'), fs.where('owner', '==', u.uid))); a.docs.forEach(function (d) { inv.push(Object.assign({ code: d.id }, d.data())); }); } catch (e) { console.warn(e); }
+    try { var b = await fs.getDocs(fs.collection(this.db, 'lists', u.uid, 'members')); b.docs.forEach(function (d) { mem.push(Object.assign({ uid: d.id }, d.data())); }); } catch (e) { console.warn(e); }
+    return { invites: inv, members: mem };
+  },
+  deleteInvite: function (code) { return this.fs.deleteDoc(this.fs.doc(this.db, 'invites', code)); },
+  removeMember: function (uid) { return this.fs.deleteDoc(this.fs.doc(this.db, 'lists', this.user.uid, 'members', uid)); },
+  joinCode: async function (raw, quiet) {
+    var fs = this.fs, u = this.user, code = cleanCode(raw);
+    if (!u) throw new Error('Primero entra con tu cuenta de Google');
+    if (code.length < 6) throw new Error('Escribe el código completo');
+    var snap = await fs.getDoc(fs.doc(this.db, 'invites', code));
+    if (!snap.exists()) throw new Error('Ese código no existe o ya fue borrado');
+    var inv = snap.data();
+    if ((inv.expiresAt || 0) <= Date.now()) throw new Error('Ese código ya venció. Pide uno nuevo.');
+    if (inv.owner === u.uid) throw new Error('Ese código es de tu propia lista');
+    await fs.setDoc(fs.doc(this.db, 'lists', inv.owner, 'members', u.uid), { email: u.email || '', name: u.displayName || '', code: code, expiresAt: inv.expiresAt, joinedAt: Date.now() });
+    await fs.setDoc(fs.doc(this.db, 'users', u.uid, 'joined', inv.owner), { ownerEmail: inv.ownerEmail || '', expiresAt: inv.expiresAt, code: code });
+    await this.loadLists();
+    this.switchList(inv.owner);
+    toast('✔ Te uniste a la lista de ' + (inv.ownerEmail || 'otra persona'));
   }
 };
+function genCode() {
+  var A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', a = new Uint32Array(7), s = '';
+  crypto.getRandomValues(a);
+  for (var i = 0; i < 7; i++) { s += A[a[i] % A.length]; if (i === 2) s += '-'; }
+  return s;
+}
+function cleanCode(s) { var c = String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return c.length > 3 ? c.slice(0, 3) + '-' + c.slice(3, 10) : c; }
+function pendingInvite() { return lsGet('COLAB_V5_INVITE', ''); }
+function clearPendingInvite() { try { localStorage.removeItem('COLAB_V5_INVITE'); } catch (e) {} }
+function fmtWhen(ms) { var d = new Date(ms); return fmtShort(iso(d)) + ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function inviteURL(code) { return appURL() + '#inv=' + code; }
+function inviteText(code, exp) {
+  return 'Te invito a registrar en mi lista de Ofrenda y Donaciones.\n\n1) Abre: ' + inviteURL(code) + '\n2) Entra con tu cuenta de Gmail.\n\nSi no se une solo: Ajustes → "Unirme a la lista de otra persona" → código ' + code + '\n\nEl acceso vence: ' + fmtWhen(exp) + '.';
+}
 function renderDiag(msg, bad) {
   var local = Object.keys(DB).filter(function (k) { return !DB[k].deleted; }).length;
   $('dgLocal').textContent = local;
   $('dgCloud').textContent = Sync.cloudCount == null ? '–' : Sync.cloudCount;
   $('dgPend').textContent = Sync.pendingCount == null ? '–' : Sync.pendingCount;
-  var u = Sync.auth && Sync.auth.currentUser;
-  $('dgInfo').textContent = 'Clave: ' + (Sync.clave || '—') + ' · Sala: ' + (Sync.room ? Sync.room.slice(0, 8) : '—') + ' · Base: ' + (Sync.dbId || '—') + ' · Usuario: ' + (u ? (u.isAnonymous ? 'anónimo' : 'editor') : 'ninguno') + ' · v' + APP_VERSION;
+  var cur = (Sync.lists || []).filter(function (l) { return l.id === Sync.listId; })[0];
+  $('dgInfo').textContent = 'Cuenta: ' + (Sync.user ? Sync.user.email : 'sin entrar') + ' · Lista: ' + (cur ? (cur.own ? 'la mía' : 'de ' + cur.email) : '—') + ' · Base: ' + (Sync.dbId || '—') + ' · v' + APP_VERSION;
   if (msg != null) { $('dgMsg').textContent = msg; $('dgMsg').style.color = bad ? '#fca5a5' : '#6ee7b7'; }
 }
 async function runCheck(silent) {
   try { var r = await Sync.check(); renderDiag(silent ? null : (r.pend ? '⚠ Faltan ' + r.pend + ' por enviar.' : '✔ Todo está en la nube.'), !!r.pend); }
-  catch (e) { renderDiag('✖ ' + (e.code ? humanErr(e) : e.message || e), true); }
+  catch (e) { renderDiag(silent ? null : '✖ ' + (e.code ? humanErr(e) : e.message || e), true); }
 }
 $('btnCheck').addEventListener('click', function () { renderDiag('Comprobando…'); runCheck(false); });
 $('btnSendAll').addEventListener('click', async function () {
   var b = this; b.disabled = true; renderDiag('Enviando…');
   try { var n = await Sync.sendAll(); await Sync.check(); renderDiag('✔ Enviados ' + n + '. En la nube hay ' + Sync.cloudCount + ' registros.'); toast('☁ Datos enviados a la nube'); }
-  catch (e) { renderDiag('✖ No se pudo enviar: ' + (e.code === 'timeout' ? 'el servidor no respondió (revisa internet).' : humanErr(e)), true); }
+  catch (e) { renderDiag('✖ No se pudo enviar: ' + (e.code === 'timeout' ? 'el servidor no respondió (revisa internet).' : (e.code ? humanErr(e) : e.message)), true); }
   b.disabled = false;
 });
 function updateCloudBar() {
-  var show = !!Sync.room && (Sync.pendingCount || 0) > 0;
+  var show = !!Sync.user && (Sync.pendingCount || 0) > 0;
   $('cloudBar').hidden = !show; $('cloudN').textContent = Sync.pendingCount || 0;
 }
 function humanErr(e) {
   var c = String((e && (e.code || e.message)) || e);
-  if (/permission-denied|insufficient permissions/i.test(c)) return 'Permiso denegado. Revisa que publicaste las reglas de firestore.rules en Firestore Database y que están activados los accesos Anónimo y Correo/contraseña.';
-  if (/operation-not-allowed|admin-restricted/i.test(c)) return 'Activa los métodos "Anónimo" y "Correo electrónico/contraseña" en Firebase → Authentication → Método de acceso.';
+  if (/unauthorized-domain/i.test(c)) return 'Falta autorizar el dominio: Firebase → Authentication → Configuración → Dominios autorizados → agrega ' + location.hostname;
+  if (/operation-not-allowed|admin-restricted/i.test(c)) return 'Activa "Google" en Firebase → Authentication → Método de acceso.';
+  if (/permission-denied|insufficient permissions/i.test(c)) return 'Permiso denegado. Revisa que publicaste las reglas nuevas de firestore.rules en Firestore Database.';
   if (/api-key|invalid-api-key|API key/i.test(c)) return 'La configuración de Firebase no es válida (apiKey). Vuelve a copiarla.';
   if (/Failed to fetch|import|dynamically imported/i.test(c)) return 'No se pudo cargar Firebase. Revisa tu conexión a internet.';
-  if (/not-found|NOT_FOUND|not exist|does not exist/i.test(c)) return 'No existe la base de datos Firestore. Créala en Firebase → Compilación → Firestore Database → Crear base de datos.';
-  if (/unavailable|failed-precondition|deadline/i.test(c)) return 'No se pudo conectar con Firestore. Verifica que creaste "Firestore Database" y tu conexión a internet.';
+  if (/not-found|NOT_FOUND|not exist|does not exist/i.test(c)) return 'No existe la base de datos Firestore. Créala en Firebase → Firestore Database.';
+  if (/unavailable|failed-precondition|deadline/i.test(c)) return 'No se pudo conectar con Firestore. Revisa tu conexión a internet.';
   return 'Error: ' + c;
 }
 function parseCfg(text) {
@@ -1025,12 +1120,7 @@ function parseCfg(text) {
   if (!o || !o.apiKey || !o.projectId || !o.appId) return null;
   return { apiKey: o.apiKey, authDomain: o.authDomain || (o.projectId + '.firebaseapp.com'), projectId: o.projectId, appId: o.appId, storageBucket: o.storageBucket || '', messagingSenderId: o.messagingSenderId || '' };
 }
-function genRoom() {
-  var W = ['maraton', 'colabora', 'fe', 'luz', 'gloria', 'sion', 'monte', 'rio', 'cielo', 'roca', 'fuente', 'camino'];
-  var a = new Uint32Array(3); crypto.getRandomValues(a);
-  return W[a[0] % W.length] + '-' + W[a[1] % W.length] + '-' + (1000 + a[2] % 9000);
-}
-/* La clave se convierte siempre en el mismo identificador interno (igual en todos los dispositivos) */
+/* Huella para la contraseña local de edición */
 function cyrb53(str, seed) {
   var h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
   for (var i = 0; i < str.length; i++) { var ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
@@ -1038,52 +1128,48 @@ function cyrb53(str, seed) {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
 }
-function roomFromClave(clave) {
-  var k = 'colab|' + norm(clave);
-  return 'K-' + (cyrb53(k, 1) + cyrb53(k, 7) + cyrb53(k, 31)).toUpperCase();
-}
-function cleanRoom(s) { return String(s || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 60); }
 function appURL() { return location.origin + location.pathname.replace(/index\.html$/, ''); }
-function linkURL() {
-  var c = Sync.effCfg(); if (!c || !Sync.room) return '';
-  var payload = { k: Sync.clave || undefined, r: Sync.clave ? undefined : Sync.room };
-  if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) payload.c = { apiKey: c.apiKey, authDomain: c.authDomain, projectId: c.projectId, appId: c.appId };
-  return appURL() + '#link=' + b64enc(JSON.stringify(payload));
-}
-var SYNC_TXT = { off: 'Solo este dispositivo', connecting: 'Conectando…', synced: 'Sincronizado', pending: 'Enviando cambios…', offline: 'Sin internet · guardado local', error: 'Error de sincronización' };
+var SYNC_TXT = { off: 'Solo este dispositivo', login: 'Sin cuenta · solo este dispositivo', connecting: 'Conectando…', synced: 'Sincronizado', pending: 'Enviando cambios…', offline: 'Sin internet · guardado local', error: 'Error de sincronización' };
 function renderSyncUI() {
-  ['syncChip', 'syncChip2'].forEach(function (id) { var el = $(id); el.dataset.state = Sync.state; el.querySelector('.txt').textContent = SYNC_TXT[Sync.state] || ''; });
+  ['syncChip', 'syncChip2'].forEach(function (id) { var el = $(id); el.dataset.state = Sync.state === 'login' ? 'off' : Sync.state; el.querySelector('.txt').textContent = SYNC_TXT[Sync.state] || ''; });
   var cfg = Sync.effCfg();
   $('cfgState').textContent = cfg ? '✓ (' + cfg.projectId + ')' : '— pendiente';
   $('cfgState').style.color = cfg ? '#6ee7b7' : '#fcd34d';
-  var on = !!Sync.room && !!cfg;
-  $('btnConnect').hidden = on && Sync.state !== 'error' && Sync.state !== 'off' && Sync.state !== 'connecting';
-  $('btnConnect').textContent = on && (Sync.state === 'error' || Sync.state === 'connecting') ? '🔄 Reintentar' : '🔗 Conectar';
-  $('btnDisconnect').hidden = !Sync.room;
-  $('inpClave').disabled = Sync.fixed || (!!Sync.room && Sync.state !== 'error');
-  $('btnGenRoom').hidden = !!Sync.fixed;
-  if (Sync.fixed) $('btnDisconnect').hidden = true;
-  if (Sync.room && document.activeElement !== $('inpClave')) $('inpClave').value = Sync.clave || Sync.room;
   var err = $('syncErr');
   err.hidden = !(Sync.state === 'error' || (Sync.state === 'offline' && Sync.msg));
   err.textContent = Sync.msg;
   err.className = Sync.state === 'error' ? 'err' : 'ok-box';
-  $('linkBox').hidden = !on;
-  $('roomBig').textContent = Sync.clave || Sync.room;
-  $('appUrl').textContent = appURL();
+  $('loginBar').hidden = !(cfg && !Sync.user && (Sync.state === 'login'));
 }
-function handleLinkHash() {
-  var m = /[#&]link=([^&]+)/.exec(location.hash); if (!m) return;
-  history.replaceState(null, '', location.pathname + location.search);
-  try {
-    var o = JSON.parse(b64dec(m[1]));
-    var clave = o.k ? String(o.k) : '', room = clave ? roomFromClave(clave) : cleanRoom(o.r);
-    if (!room) throw new Error('sin clave');
-    if (Sync.room === room) { toast('Este dispositivo ya está conectado'); return; }
-    if (!confirm('¿Conectar este dispositivo a la lista del equipo' + (clave ? ' (clave: ' + clave + ')' : '') + '?\n\nLos datos que ya tengas aquí se unirán con los del equipo.')) return;
-    var c = o.c && parseCfg(JSON.stringify(o.c)); if (c) Sync.cfg = c;
-    Sync.clave = clave; Sync.room = room; Sync.manualOff = false; Sync.save(); Sync.start(); toast('🔗 Dispositivo conectado');
-  } catch (e) { toast('Enlace de vinculación inválido', 'err'); }
+var accessCache = null;
+function renderAccount() {
+  var u = Sync.user;
+  $('accOut').hidden = !!u; $('accIn').hidden = !u; $('diagBox').hidden = !u;
+  renderSyncUI();
+  if (!u) return;
+  $('accName').textContent = u.displayName || 'Mi cuenta';
+  $('accEmail').textContent = u.email || '';
+  if (u.photoURL) $('accPhoto').src = u.photoURL; else $('accPhoto').removeAttribute('src');
+  $('selList').innerHTML = (Sync.lists || []).map(function (l) {
+    return '<option value="' + esc(l.id) + '">' + (l.own ? '📒 Mi lista (' + esc(l.email || '') + ')' : '👥 Lista de ' + esc(l.email) + ' · vence ' + fmtWhen(l.expiresAt)) + '</option>';
+  }).join('');
+  $('selList').value = Sync.listId;
+  $('ownBox').hidden = !Sync.isOwnList();
+  renderDiag(null);
+  if (Sync.isOwnList() && $('tab5').classList.contains('active')) renderAccess();
+}
+async function renderAccess() {
+  if (!Sync.user || !Sync.isOwnList()) return;
+  var d = await Sync.accessData(), now = Date.now(), html = '';
+  var mem = d.members.filter(function (m) { return (m.expiresAt || 0) > now; });
+  var inv = d.invites.filter(function (i) { return (i.expiresAt || 0) > now; });
+  if (mem.length) html += '<p class="muted small" style="margin:4px 0">Personas con acceso:</p>' + mem.map(function (m) {
+    return '<div class="acc-item"><div>' + esc(m.email || m.name || 'Invitado') + '<small>vence ' + fmtWhen(m.expiresAt) + '</small></div><button type="button" class="btn btn-sm btn-danger" data-rm="' + esc(m.uid) + '">Quitar</button></div>';
+  }).join('');
+  if (inv.length) html += '<p class="muted small" style="margin:10px 0 4px">Códigos activos:</p>' + inv.map(function (i) {
+    return '<div class="acc-item"><div><code>' + esc(i.code) + '</code><small>vence ' + fmtWhen(i.expiresAt) + '</small></div><button type="button" class="btn btn-sm" data-delinv="' + esc(i.code) + '">Borrar código</button></div>';
+  }).join('');
+  $('accessList').innerHTML = html;
 }
 
 /* ===================== SELECTOR DE PERIODO (día / mes / año / intervalo) ===================== */
@@ -1214,7 +1300,7 @@ $('passForm').addEventListener('submit', function (e) {
     return;
   }
   if (okView) lsSet(LS.view, Date.now() + LOCK_MS);
-  if (okEdit) { lsSet(LS.edit, Date.now() + LOCK_MS); Sync.signInEditor($('passInp').value.trim()); }
+  if (okEdit) lsSet(LS.edit, Date.now() + LOCK_MS);
   var cb = passCb; closePass(); updateLockUI();
   toast(okEdit ? '🔓 Edición activada por 2 horas' : '👁 Acceso concedido');
   if (cb) cb();
@@ -1250,7 +1336,7 @@ function switchTab(n) {
   for (var i = 0; i <= 5; i++) $('tab' + i).classList.toggle('active', String(i) === n);
   document.body.dataset.tab = n;
   UI.tab = n; lsSet(LS.ui, UI);
-  if (n === '5') { renderSyncUI(); renderStorageInfo(); renderDiag(''); if (Sync.ready) runCheck(true); }
+  if (n === '5') { renderAccount(); renderStorageInfo(); renderDiag(''); if (Sync.ready) runCheck(true); }
   if (n === '4' && !$('repPreview').hidden) generateReport(true);
   window.scrollTo({ top: 0 });
 }
@@ -1810,7 +1896,7 @@ $('inpFile').addEventListener('change', function (e) {
 $('btnWipe').addEventListener('click', function () { requireEdit(wipeAllData); });
 function wipeAllData() {
   var recs = activeRecs(); if (!recs.length) return toast('No hay registros');
-  var msg = '¿Seguro que deseas borrar TODOS los registros (' + recs.length + ')?' + (Sync.room ? '\n\n⚠ También se borrarán en todos los dispositivos vinculados.' : '');
+  var msg = '¿Seguro que deseas borrar TODOS los registros (' + recs.length + ')?' + (Sync.user ? '\n\n⚠ También se borrarán en todos los dispositivos vinculados.' : '');
   if (!confirm(msg)) return;
   if (!confirm('Última confirmación: esta acción no se puede deshacer. ¿Guardaste una copia?')) return;
   commit(recs.map(function (r) { return Object.assign({}, r, { deleted: true }); }));
@@ -1824,46 +1910,70 @@ async function renderStorageInfo() {
   $('storageInfo').textContent = parts.join(' ');
 }
 
-/* ===================== AJUSTES DE SINCRONIZACIÓN ===================== */
+/* ===================== AJUSTES DE CUENTA ===================== */
 $('btnSaveCfg').addEventListener('click', function () {
   var c = parseCfg($('inpCfg').value);
   if (!c) return toast('No encontré apiKey, projectId y appId en el texto pegado', 'err');
-  Sync.cfg = c; Sync.save(); $('inpCfg').value = ''; $('cfgDetails').open = false; renderSyncUI();
-  toast('✓ Configuración guardada');
-  if (Sync.room) Sync.start();
+  Sync.cfg = c; Sync.save(); toast('✓ Configuración guardada'); setTimeout(function () { location.reload(); }, 700);
 });
 $('btnClearCfg').addEventListener('click', function () { requireEdit(function () {
   if (!confirm('¿Quitar la configuración de Firebase de este dispositivo?')) return;
-  Sync.cfg = null; Sync.stop(); renderSyncUI();
+  Sync.cfg = null; Sync.save(); location.reload();
 }); });
-$('btnGenRoom').addEventListener('click', function () { if (!$('inpClave').disabled) $('inpClave').value = genRoom(); });
-$('btnConnect').addEventListener('click', function () {
-  if (!Sync.effCfg()) { $('cfgDetails').open = true; return toast('Primero completa el Paso 1 (Firebase)', 'err'); }
-  var clave = $('inpClave').value.trim();
-  if (Sync.room && (Sync.state === 'error' || Sync.state === 'connecting')) { if (Sync.ready) Sync.listen(); else Sync.start(); toast('🔄 Reintentando…'); return; }
-  if (norm(clave).length < 6) return toast('La clave debe tener al menos 6 caracteres', 'err');
-  Sync.clave = clave; Sync.room = roomFromClave(clave); Sync.manualOff = false; Sync.save(); Sync.start();
-  toast('🔗 Conectando con la clave del equipo…');
-});
-$('btnDisconnect').addEventListener('click', function () {
-  if (!confirm('¿Desconectar este dispositivo? Los datos se quedan guardados aquí, pero ya no se sincronizarán.')) return;
-  Sync.manualOff = true; Sync.stop(); $('inpClave').value = '';
-});
-function inviteText() {
-  var u = linkURL();
-  return 'Te invito a la lista de Ofrenda y Donaciones.\n\n1) Abre: ' + u + '\n\nSi no se conecta solo: abre ' + appURL() + ' → Ajustes → escribe la clave: ' + (Sync.clave || Sync.room) + ' → Conectar.';
+async function doLogin() {
+  try { $('btnGoogle').disabled = true; await Sync.signIn(); }
+  catch (e) { console.error(e); toast('✖ ' + humanErr(e), 'err'); Sync.setState('error', humanErr(e)); }
+  finally { $('btnGoogle').disabled = false; }
 }
-$('btnCopyLink').addEventListener('click', function () {
-  if (!linkURL()) return; var t = inviteText();
-  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast('📋 Invitación copiada'); }, function () { prompt('Copia esta invitación:', t); });
+$('btnGoogle').addEventListener('click', doLogin);
+$('btnLoginBar').addEventListener('click', function () { switchTab(5); doLogin(); });
+$('btnSignOut').addEventListener('click', function () {
+  if (!confirm('¿Salir de tu cuenta en este dispositivo? Los datos se quedan guardados aquí.')) return;
+  Sync.signOut();
 });
-$('btnShareLink').addEventListener('click', function () {
-  if (!linkURL()) return; var t = inviteText();
+$('selList').addEventListener('change', function () { Sync.switchList(this.value); toast('📒 Lista cambiada'); });
+var lastInv = null;
+$('btnCreateInv').addEventListener('click', async function () {
+  var b = this; b.disabled = true;
+  try {
+    lastInv = await Sync.createInvite(+$('selInvDur').value);
+    $('invCode').textContent = lastInv.code; $('invExp').textContent = 'Vence: ' + fmtWhen(lastInv.expiresAt);
+    $('invNew').hidden = false; renderAccess();
+  } catch (e) { toast('✖ ' + humanErr(e), 'err'); }
+  b.disabled = false;
+});
+$('btnShareInv').addEventListener('click', function () {
+  if (!lastInv) return; var t = inviteText(lastInv.code, lastInv.expiresAt);
   if (navigator.share) navigator.share({ title: 'Ofrenda y Donaciones', text: t }).catch(function () {});
   else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
 });
-window.addEventListener('online', function () { Sync.sent = {}; if (Sync.ready) Sync.listen(); if (Sync.pendingPw) Sync.signInEditor(Sync.pendingPw); if (Sync.room && !Sync.ready) Sync.start(); else if (Sync.ready && Sync.state === 'offline') Sync.setState('connecting'); });
-window.addEventListener('offline', function () { if (Sync.room) Sync.setState('offline'); });
+$('btnCopyInv').addEventListener('click', function () {
+  if (!lastInv) return; var t = inviteText(lastInv.code, lastInv.expiresAt);
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast('📋 Invitación copiada'); }, function () { prompt('Copia esta invitación:', t); });
+});
+$('accessList').addEventListener('click', async function (e) {
+  var rm = e.target.closest('[data-rm]'), di = e.target.closest('[data-delinv]');
+  try {
+    if (rm && confirm('¿Quitarle el acceso a tu lista a esta persona?')) { await Sync.removeMember(rm.dataset.rm); toast('Acceso retirado'); }
+    if (di) { await Sync.deleteInvite(di.dataset.delinv); toast('Código borrado'); }
+  } catch (err) { toast('✖ ' + humanErr(err), 'err'); }
+  renderAccess();
+});
+$('btnJoin').addEventListener('click', async function () {
+  var b = this; b.disabled = true;
+  try { await Sync.joinCode($('inpJoin').value); $('inpJoin').value = ''; }
+  catch (e) { toast('✖ ' + (e.code ? humanErr(e) : e.message), 'err'); }
+  b.disabled = false;
+});
+function handleInviteHash() {
+  var m = /[#&]inv=([A-Za-z0-9-]+)/.exec(location.hash); if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  lsSet('COLAB_V5_INVITE', cleanCode(m[1]));
+  if (Sync.user) { Sync.joinCode(pendingInvite()).catch(function (e) { toast('✖ ' + (e.message || humanErr(e)), 'err'); }); clearPendingInvite(); }
+  else { switchTab(5); toast('👤 Entra con tu Gmail para unirte a la lista'); }
+}
+window.addEventListener('online', function () { Sync.sent = {}; if (Sync.user && Sync.ready) Sync.listen(); else Sync.start(); });
+window.addEventListener('offline', function () { if (Sync.user) Sync.setState('offline'); });
 
 /* ===================== INSTALACIÓN / ACTUALIZACIÓN ===================== */
 var deferredPrompt = null;
@@ -1956,11 +2066,11 @@ document.addEventListener('visibilitychange', function () { if (!document.hidden
 updateLockUI(); setInterval(updateLockUI, 20000);
 refreshAll();
 renderSyncUI();
-handleLinkHash();
-Sync.start();
+renderAccount();
+Sync.start().then(handleInviteHash);
 switchTab(UI.tab && $('tab' + UI.tab) ? UI.tab : '0');
 viewGate();
-window.addEventListener('storage', function (e) { if (e.key === LS.data) { loadLocal(); scheduleRefresh(); } });
+window.addEventListener('storage', function (e) { if (e.key === curKey) { DB = lsGet(curKey, {}); scheduleRefresh(); } });
 </script>
 </body>
 </html>

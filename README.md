@@ -42,25 +42,22 @@ App web instalable (PWA) para registrar colaboraciones del maratón. Funciona en
 - **iPhone (Safari):** Compartir ⬆ → *Agregar a pantalla de inicio*.
 - **PC (Chrome/Edge):** ícono de instalar en la barra de direcciones.
 
-## 3) Sincronización (ya configurada para el proyecto `maraton-de-ofrenda`)
+## 3) Cuentas de Google, sincronización e invitaciones
 
-`config.js` ya trae la configuración de Firebase, la clave del equipo y el usuario editor. Solo falta dejar listo Firebase **una vez**:
+Cada persona entra con su **Gmail** (Ajustes → **Entrar con Google**). Su lista queda guardada en su cuenta y se sincroniza en todos los dispositivos donde entre con el mismo Gmail. **Nadie puede leer la lista de otro**: lo garantizan las reglas de Firestore, no solo la app.
 
-1. **Authentication → Método de acceso:** activa **Anónimo** y también **Correo electrónico/contraseña** (solo el primer interruptor).
-2. **Authentication → Usuarios → Agregar usuario:**
-   - Correo: `editor@ofrenda-tvbethel.com`
-   - Contraseña: `tvbethel.com123` (la misma contraseña de edición de la app)
-3. **Firestore Database → Reglas:** pega el contenido de `firestore.rules` y toca **Publicar**. (Es *Firestore Database*, no *Realtime Database*.)
+### Preparar Firebase (una sola vez)
+1. **Authentication → Método de acceso → Agregar proveedor nuevo → Google** → Habilitar → elige tu correo de asistencia → Guardar.
+2. **Authentication → Configuración → Dominios autorizados → Agregar dominio** → `rulymauzi-byte.github.io`.
+3. **Firestore Database → Reglas** → pega todo `firestore.rules` → **Publicar**.
 
-Cada dispositivo revisa su memoria cada vez que se conecta y **envía solo** los registros que la nube todavía no tiene; no hace falta tocar nada.
+### Invitar a alguien (acceso temporal)
+1. Ajustes → **Invitar a alguien a tu lista** → elige cuánto dura (2 horas, 1 día, 7 días o 30 días) → **Crear código**.
+2. Envía la invitación por WhatsApp. La otra persona abre el enlace y entra con **su** Gmail; queda unida a tu lista hasta que venza.
+3. También puede escribir el código en Ajustes → **Unirme a la lista de otra persona**.
+4. En Ajustes ves quién tiene acceso y puedes **Quitar** a alguien o **Borrar código** cuando quieras.
 
-Listo. Cada dispositivo que abra la app desde GitHub Pages se conecta solo y ve la lista. Cuando alguien escribe la contraseña de edición, ese dispositivo entra como editor y sus registros se suben a la nube y llegan a todos en segundos.
-
-### Seguridad con repositorio público
-- Cualquiera que abra la app puede **ver** la lista (así lo pediste: ver no lleva contraseña).
-- Solo quien sepa la **contraseña de edición** puede agregar, cambiar o borrar. Esto lo protege Firebase con el usuario editor, no solo la app, así que aunque alguien copie el código de GitHub no puede modificar los datos.
-- La contraseña no está escrita en ningún archivo del repositorio.
-- Si cambias la contraseña de edición, cámbiala también en Firebase → Authentication → Usuarios.
+Al vencer o al quitarle el acceso, su app vuelve sola a su propia lista.
 
 ## Actualizar la app
 
