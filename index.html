@@ -145,6 +145,12 @@ body.paid-mode #btnFilter,body.paid-mode #filterPanel{display:none!important}
 #tab3 .sub-btn{text-align:center}
 @media (max-width:700px){ .tbl th,.tbl td{padding:9px 8px;font-size:.84rem} .tbl td.nm{max-width:150px} }
 
+/* DIAGNÓSTICO */
+.diag{border:1px solid var(--border);border-radius:12px;padding:12px;margin:12px 0}
+.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.diag-grid span{display:block;font-size:.72rem;color:var(--muted)}
+.diag-grid b{font-size:1.3rem}
+
 /* AVISO: registros sin subir */
 .cloud-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #f59e0b;background:rgba(245,158,11,.14);color:#fde68a;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.88rem}
 body:not([data-tab="0"]):not([data-tab="1"]):not([data-tab="2"]) .cloud-bar{display:none!important}
@@ -600,6 +606,19 @@ select option{background:#0f172a;color:var(--text)}
         <button type="button" class="btn btn-danger" id="btnDisconnect" hidden>Desconectar</button>
       </div>
       <p class="err" id="syncErr" hidden></p>
+      <div class="diag" id="diagBox">
+        <div class="diag-grid">
+          <div><span>Este dispositivo</span><b id="dgLocal">–</b></div>
+          <div><span>En la nube</span><b id="dgCloud">–</b></div>
+          <div><span>Por enviar</span><b id="dgPend">–</b></div>
+        </div>
+        <p class="muted small" id="dgInfo"></p>
+        <div class="actions" style="margin-top:8px">
+          <button type="button" class="btn btn-primary grow" id="btnSendAll">☁ Enviar todo ahora</button>
+          <button type="button" class="btn grow" id="btnCheck">🔍 Comprobar</button>
+        </div>
+        <p class="muted small" id="dgMsg" style="margin-top:8px"></p>
+      </div>
       <p class="err" id="fileWarn" hidden>⚠ Estás abriendo la app como archivo de la computadora. Para sincronizar ábrela desde su enlace de internet (GitHub Pages).</p>
 
       <div id="linkBox" hidden>
@@ -689,7 +708,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '4.8.0';
+var APP_VERSION = '4.9.0';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -828,7 +847,8 @@ var Sync = {
           var appM = mods[0], authM = mods[1], fsM = mods[2];
           var app = appM.initializeApp(cfg);
           var db;
-          var dbId = lsGet('COLAB_V4_DBID', '') || window.FIRESTORE_DB_ID || '(default)';
+          var dbId = window.FIRESTORE_DB_ID || lsGet('COLAB_V4_DBID', '') || '(default)';
+          if (window.FIRESTORE_DB_ID) { try { localStorage.removeItem('COLAB_V4_DBID'); localStorage.removeItem('COLAB_V4_DBID_TRIED'); } catch (e) {} }
           self.dbId = dbId;
           try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true, localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }, dbId); }
           catch (e) { try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }, dbId); } catch (e2) { db = fsM.getFirestore(app, dbId); } }
@@ -868,7 +888,7 @@ var Sync = {
       console.error('diagnóstico', e);
       // Si la base se creó con el nombre "default" (sin paréntesis), probar con ese nombre una vez
       var other = self.dbId === '(default)' ? 'default' : '(default)';
-      if (/not-found|not exist|unavailable|timeout/i.test(String(e && (e.code || e.message))) && !lsGet('COLAB_V4_DBID_TRIED', false)) {
+      if (!window.FIRESTORE_DB_ID && /not-found|not exist|unavailable|timeout/i.test(String(e && (e.code || e.message))) && !lsGet('COLAB_V4_DBID_TRIED', false)) {
         lsSet('COLAB_V4_DBID_TRIED', true); lsSet('COLAB_V4_DBID', other); location.reload(); return;
       }
       self.setState('error', e && e.code === 'timeout'
@@ -901,7 +921,7 @@ var Sync = {
     }
     if (changed) { saveLocal(); scheduleRefresh(); }
     if (!navigator.onLine || snap.metadata.fromCache) this.setState(snap.metadata.hasPendingWrites ? 'offline' : (navigator.onLine ? 'connecting' : 'offline'));
-    else this.setState(snap.metadata.hasPendingWrites ? 'pending' : 'synced');
+    else { this.setState(snap.metadata.hasPendingWrites ? 'pending' : 'synced'); if (!this.checkedOnce) { this.checkedOnce = true; runCheck(true); } }
   },
   /* Solo el usuario editor (contraseña de edición) puede escribir en la nube; los demás solo ven */
   isEditor: function () { var u = this.auth && this.auth.currentUser; return !!(u && !u.isAnonymous); },
@@ -929,17 +949,58 @@ var Sync = {
       recs.slice(i, i + 400).forEach(function (r) {
         b.set(fs.doc(self.col, r.id), { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted });
       });
-      b.commit().then(function () { self.pendingCount = 0; updateCloudBar(); })
+      b.commit().then(function () { runCheck(true); })
         .catch(function (e) { console.error(e); self.sent = {}; self.setState('error', humanErr(e)); updateCloudBar(); });
     }
+  },
+  /* Envía TODO lo que tiene este dispositivo y espera confirmación del servidor */
+  sendAll: async function () {
+    if (!this.ready || !this.col) { await this.start(); }
+    if (!this.ready || !this.col) throw new Error('Sin conexión con la nube');
+    var fs = this.fs, recs = Object.keys(DB).map(function (k) { return DB[k]; }), done = 0;
+    for (var i = 0; i < recs.length; i += 400) {
+      var b = fs.writeBatch(this.db), part = recs.slice(i, i + 400), self = this;
+      part.forEach(function (r) { b.set(fs.doc(self.col, r.id), { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted }); });
+      await Promise.race([b.commit(), new Promise(function (_, rej) { setTimeout(function () { rej({ code: 'timeout' }); }, 20000); })]);
+      done += part.length;
+    }
+    return done;
+  },
+  check: async function () {
+    if (!this.ready || !this.col) throw new Error('Sin conexión con la nube');
+    var r = await this.fs.getDocsFromServer(this.col), rem = {}, live = 0;
+    r.docs.forEach(function (d) { var x = d.data(); rem[d.id] = Number(x.updatedAt) || 0; if (!x.deleted) live++; });
+    var pend = 0; for (var k in DB) if (!(k in rem) ? !DB[k].deleted : (DB[k].updatedAt || 0) > rem[k]) pend++;
+    this.cloudCount = live; this.pendingCount = pend; updateCloudBar();
+    return { cloud: live, pend: pend };
   },
   stop: function () {
     if (this.unsub) this.unsub();
     this.unsub = null; this.ready = false; this.col = null; this.room = ''; this.clave = ''; this.save(); this.setState('off');
   }
 };
+function renderDiag(msg, bad) {
+  var local = Object.keys(DB).filter(function (k) { return !DB[k].deleted; }).length;
+  $('dgLocal').textContent = local;
+  $('dgCloud').textContent = Sync.cloudCount == null ? '–' : Sync.cloudCount;
+  $('dgPend').textContent = Sync.pendingCount == null ? '–' : Sync.pendingCount;
+  var u = Sync.auth && Sync.auth.currentUser;
+  $('dgInfo').textContent = 'Clave: ' + (Sync.clave || '—') + ' · Sala: ' + (Sync.room ? Sync.room.slice(0, 8) : '—') + ' · Base: ' + (Sync.dbId || '—') + ' · Usuario: ' + (u ? (u.isAnonymous ? 'anónimo' : 'editor') : 'ninguno') + ' · v' + APP_VERSION;
+  if (msg != null) { $('dgMsg').textContent = msg; $('dgMsg').style.color = bad ? '#fca5a5' : '#6ee7b7'; }
+}
+async function runCheck(silent) {
+  try { var r = await Sync.check(); renderDiag(silent ? null : (r.pend ? '⚠ Faltan ' + r.pend + ' por enviar.' : '✔ Todo está en la nube.'), !!r.pend); }
+  catch (e) { renderDiag('✖ ' + (e.code ? humanErr(e) : e.message || e), true); }
+}
+$('btnCheck').addEventListener('click', function () { renderDiag('Comprobando…'); runCheck(false); });
+$('btnSendAll').addEventListener('click', async function () {
+  var b = this; b.disabled = true; renderDiag('Enviando…');
+  try { var n = await Sync.sendAll(); await Sync.check(); renderDiag('✔ Enviados ' + n + '. En la nube hay ' + Sync.cloudCount + ' registros.'); toast('☁ Datos enviados a la nube'); }
+  catch (e) { renderDiag('✖ No se pudo enviar: ' + (e.code === 'timeout' ? 'el servidor no respondió (revisa internet).' : humanErr(e)), true); }
+  b.disabled = false;
+});
 function updateCloudBar() {
-  var show = Sync.state === 'error' && (Sync.pendingCount || 0) > 0;
+  var show = !!Sync.room && (Sync.pendingCount || 0) > 0;
   $('cloudBar').hidden = !show; $('cloudN').textContent = Sync.pendingCount || 0;
 }
 function humanErr(e) {
@@ -1170,7 +1231,7 @@ $('lockChip').addEventListener('click', function () {
   if (canEdit()) { if (confirm('¿Bloquear la edición ahora en este dispositivo?')) { lsSet(LS.edit, 0); updateLockUI(); } }
   else openPass('edit', function () { switchTab(1); });
 });
-$('btnCloudUp').addEventListener('click', function () { Sync.sent = {}; if (Sync.ready) Sync.listen(); else Sync.start(); toast('☁ Enviando…'); });
+$('btnCloudUp').addEventListener('click', function () { $('btnSendAll').click(); });
 $('btnUnlock').addEventListener('click', function () { openPass('edit', function () { $('inpName').focus(); }); });
 function viewGate() {
   if (!window.PEDIR_CLAVE_PARA_VER) return;
@@ -1185,7 +1246,7 @@ function switchTab(n) {
   for (var i = 0; i <= 5; i++) $('tab' + i).classList.toggle('active', String(i) === n);
   document.body.dataset.tab = n;
   UI.tab = n; lsSet(LS.ui, UI);
-  if (n === '5') { renderSyncUI(); renderStorageInfo(); }
+  if (n === '5') { renderSyncUI(); renderStorageInfo(); renderDiag(''); if (Sync.ready) runCheck(true); }
   if (n === '4' && !$('repPreview').hidden) generateReport(true);
   window.scrollTo({ top: 0 });
 }
