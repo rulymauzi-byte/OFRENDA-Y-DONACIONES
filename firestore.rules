@@ -2,11 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /rooms/{room}/records/{id} {
-      // Cualquiera con la app puede VER
-      allow read: if request.auth != null;
-      // Solo el usuario editor (contraseña de edición) puede agregar, cambiar o borrar
-      allow write: if request.auth != null
-                   && request.auth.token.email == 'editor@ofrenda-tvbethel.com';
+      // Cualquier dispositivo con la app puede ver y enviar sus datos
+      allow read, write: if request.auth != null;
     }
   }
 }

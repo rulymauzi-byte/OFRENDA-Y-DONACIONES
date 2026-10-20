@@ -52,6 +52,8 @@ App web instalable (PWA) para registrar colaboraciones del maratón. Funciona en
    - Contraseña: `tvbethel.com123` (la misma contraseña de edición de la app)
 3. **Firestore Database → Reglas:** pega el contenido de `firestore.rules` y toca **Publicar**. (Es *Firestore Database*, no *Realtime Database*.)
 
+Cada dispositivo revisa su memoria cada vez que se conecta y **envía solo** los registros que la nube todavía no tiene; no hace falta tocar nada.
+
 Listo. Cada dispositivo que abra la app desde GitHub Pages se conecta solo y ve la lista. Cuando alguien escribe la contraseña de edición, ese dispositivo entra como editor y sus registros se suben a la nube y llegan a todos en segundos.
 
 ### Seguridad con repositorio público

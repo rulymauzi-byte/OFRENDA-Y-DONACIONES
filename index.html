@@ -145,6 +145,10 @@ body.paid-mode #btnFilter,body.paid-mode #filterPanel{display:none!important}
 #tab3 .sub-btn{text-align:center}
 @media (max-width:700px){ .tbl th,.tbl td{padding:9px 8px;font-size:.84rem} .tbl td.nm{max-width:150px} }
 
+/* AVISO: registros sin subir */
+.cloud-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #f59e0b;background:rgba(245,158,11,.14);color:#fde68a;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.88rem}
+body:not([data-tab="0"]):not([data-tab="1"]):not([data-tab="2"]) .cloud-bar{display:none!important}
+
 /* AVISO DE INSTALACIÓN (muy visible antes de instalar) */
 .install-bar{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#059669,#10b981 55%,#22c55e);border-radius:16px;padding:12px 14px;margin-bottom:14px;box-shadow:0 10px 26px rgba(16,185,129,.35);position:relative}
 .install-bar img{width:46px;height:46px;border-radius:12px;flex:none;box-shadow:0 4px 10px rgba(0,0,0,.25)}
@@ -377,6 +381,11 @@ select option{background:#0f172a;color:var(--text)}
       <div class="pill"><span>Hoy</span><strong id="lblToday">Q0.00</strong></div>
     </div>
   </header>
+
+  <div class="cloud-bar" id="cloudBar" hidden>
+    <span>☁ <b id="cloudN">0</b> registros están solo en este dispositivo.</span>
+    <button type="button" class="btn btn-sm btn-primary" id="btnCloudUp">Subir a la nube</button>
+  </div>
 
   <div class="install-bar" id="installBar" hidden>
     <img src="icons/icon-192.png" alt="" />
@@ -680,7 +689,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '4.6.3';
+var APP_VERSION = '4.7.0';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -787,6 +796,10 @@ function commit(recs) {            // guarda local + envía a la nube
   });
   saveLocal();
   Sync.push(recs);
+  if (Sync.ready && !Sync.isEditor() && window.EDITOR_EMAIL) {
+    Sync.pendingCount = (Sync.pendingCount || 0) + recs.length; updateCloudBar();
+    if (!Sync.askedUp) { Sync.askedUp = true; setTimeout(function () { openPass('edit', null, 'Escribe la contraseña para subir tus registros a la nube y que lleguen a los otros dispositivos.'); }, 400); }
+  }
   scheduleRefresh();
 }
 function removeRec(id) { var r = DB[id]; if (!r) return; var c = Object.assign({}, r, { deleted: true }); commit([c]); }
@@ -885,6 +898,11 @@ var Sync = {
       for (var k in DB) if (!(k in remote) || (DB[k].updatedAt || 0) > remote[k]) up.push(DB[k]);
       if (up.length) this.push(up);
     }
+    if (!snap.metadata.fromCache) {
+      var rem = {}; snap.docs.forEach(function (d) { rem[d.id] = Number(d.data().updatedAt) || 0; });
+      var n = 0; for (var k2 in DB) if (!(k2 in rem) ? !DB[k2].deleted : (DB[k2].updatedAt || 0) > rem[k2]) n++;
+      this.pendingCount = n; updateCloudBar();
+    }
     if (changed) { saveLocal(); scheduleRefresh(); }
     if (!navigator.onLine || snap.metadata.fromCache) this.setState(snap.metadata.hasPendingWrites ? 'offline' : (navigator.onLine ? 'connecting' : 'offline'));
     else this.setState(snap.metadata.hasPendingWrites ? 'pending' : 'synced');
@@ -900,7 +918,7 @@ var Sync = {
       await this.authM.signInWithEmailAndPassword(this.auth, email, pw);
       this.pendingPw = null;
       this.listen();                                                       // vuelve a revisar y sube lo pendiente
-      toast('☁ Editor conectado: los cambios se guardan en la nube');
+      toast('☁ Editor conectado: subiendo tus registros a la nube…'); updateCloudBar();
     } catch (e) {
       var c = String(e && (e.code || e.message));
       if (/network/i.test(c) || !navigator.onLine) { this.pendingPw = pw; this.setState('offline', 'Sin internet: los cambios se subirán al volver la conexión.'); }
@@ -924,6 +942,10 @@ var Sync = {
     this.unsub = null; this.ready = false; this.col = null; this.room = ''; this.clave = ''; this.save(); this.setState('off');
   }
 };
+function updateCloudBar() {
+  var show = Sync.ready && !Sync.isEditor() && (Sync.pendingCount || 0) > 0;
+  $('cloudBar').hidden = !show; $('cloudN').textContent = Sync.pendingCount || 0;
+}
 function humanErr(e) {
   var c = String((e && (e.code || e.message)) || e);
   if (/permission-denied|insufficient permissions/i.test(c)) return 'Permiso denegado. Revisa que publicaste las reglas de firestore.rules en Firestore Database y que están activados los accesos Anónimo y Correo/contraseña.';
@@ -1107,10 +1129,10 @@ function editUntil() { return Number(lsGet(LS.edit, 0)) || 0; }
 function canEdit() { return Date.now() < editUntil(); }
 function touchEdit() { if (canEdit()) lsSet(LS.edit, Date.now() + LOCK_MS); }   // cada uso renueva las 2 horas
 var passCb = null, passMode = 'edit';
-function openPass(mode, cb) {
+function openPass(mode, cb, sub) {
   passMode = mode; passCb = cb || null;
   $('passTitle').textContent = mode === 'view' ? 'Contraseña para ver los datos' : 'Contraseña para ingresar datos';
-  $('passSub').textContent = 'Se recordará en este dispositivo por 2 horas.';
+  $('passSub').textContent = sub || 'Se recordará en este dispositivo por 2 horas.';
   $('passCancel').hidden = mode === 'view';
   $('passErr').hidden = true; $('passInp').value = ''; $('passInp').type = 'password';
   $('passModal').hidden = false;
@@ -1152,6 +1174,7 @@ $('lockChip').addEventListener('click', function () {
   if (canEdit()) { if (confirm('¿Bloquear la edición ahora en este dispositivo?')) { lsSet(LS.edit, 0); updateLockUI(); } }
   else openPass('edit', function () { switchTab(1); });
 });
+$('btnCloudUp').addEventListener('click', function () { openPass('edit', null, 'Escribe la contraseña de edición para subir tus registros a la nube.'); });
 $('btnUnlock').addEventListener('click', function () { openPass('edit', function () { $('inpName').focus(); }); });
 function viewGate() {
   if (!window.PEDIR_CLAVE_PARA_VER) return;
