@@ -7,11 +7,13 @@
   1) FIREBASE_CONFIG: pega aquí el bloque firebaseConfig de tu proyecto Firebase.
      (La apiKey de Firebase NO es secreta; la seguridad la dan las reglas.)
 
-  2) SYNC_CLAVE (opcional): si escribes aquí la clave del equipo, los dispositivos se
-     conectan SOLOS al abrir la app, sin escribir nada.
-     ⚠ Si tu repositorio de GitHub es PÚBLICO, cualquiera que vea este archivo podría
-       ver y editar tu lista. En ese caso déjalo vacío ('') y escribe la clave dentro
-       de la app (Ajustes) en cada dispositivo, o envía la invitación por WhatsApp.
+  2) SYNC_CLAVE: la clave del equipo. Con ella los dispositivos se conectan SOLOS.
+     Es seguro tenerla en un repositorio PÚBLICO: cualquiera podría VER la lista,
+     pero solo quien sepa la contraseña de edición puede agregar, cambiar o borrar
+     (lo protege Firebase con el usuario EDITOR_EMAIL de abajo).
+
+  3) EDITOR_EMAIL: el usuario que creaste en Firebase → Authentication → Usuarios,
+     con la contraseña de edición (tvbethel.com123). La contraseña NO va aquí.
 
   Ejemplo:
   window.FIREBASE_CONFIG = {
@@ -22,11 +24,23 @@
   };
   window.SYNC_CLAVE = '';
 */
-window.FIREBASE_CONFIG = null;
-window.SYNC_CLAVE = '';
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCH84PxgR0x3w2rkNp30HH5mUfuG2NrgHM",
+  authDomain: "maraton-de-ofrenda.firebaseapp.com",
+  projectId: "maraton-de-ofrenda",
+  storageBucket: "maraton-de-ofrenda.firebasestorage.app",
+  messagingSenderId: "435884902168",
+  appId: "1:435884902168:web:61e6f2f59934af694a006d"
+};
+
+// Clave del equipo: con esto todos los dispositivos se conectan solos.
+window.SYNC_CLAVE = 'ofrenda-tvbethel-8427';
+
+// Usuario editor (debe existir en Firebase → Authentication → Usuarios)
+window.EDITOR_EMAIL = 'editor@ofrenda-tvbethel.com';
 
 /*
-  3) CONTRASEÑAS
+  4) CONTRASEÑAS
      - Para agregar, editar o borrar datos SIEMPRE se pide "tvbethel.com123"
        (se recuerda 2 horas desde el último uso en cada dispositivo).
      - Para solo VER los datos no se pide contraseña. Si algún día quieres pedirla,

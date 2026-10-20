@@ -1,6 +1,6 @@
 /* Service worker: permite instalar la app y usarla sin internet.
    Cuando cambies index.html u otros archivos, sube también el número de VERSION. */
-const VERSION = 'colab-v4.3.0';
+const VERSION = 'colab-v4.5.0';
 const SHELL = [
   './', './index.html', './manifest.webmanifest', './config.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/logo.png'

@@ -123,6 +123,41 @@ body.locked .row .acts{display:none}
 body.locked .list .row{grid-template-columns:34px minmax(0,1fr) 112px 108px 36px;grid-template-areas:"n nm dt amt pd"}
 .unlock-lbl{font-size:.78rem;color:#6ee7b7}
 
+/* PÁGINAS LIMPIAS: la cabecera con totales solo en Principal */
+body:not([data-tab="0"]) .hero, body:not([data-tab="0"]) #installBar, body:not([data-tab="0"]) .fab.help{display:none!important}
+.page-t{font-size:1.15rem;font-weight:800;margin:6px 2px 12px}
+.search-row{display:flex;gap:8px;margin:4px 0 10px}
+.search-box{flex:1;position:relative;min-width:0}
+.search-box span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex}
+.search-box svg{width:18px;height:18px}
+.search-box input{padding-left:40px;border-radius:12px;height:48px}
+#btnFilter{border-radius:12px;height:48px;position:relative}
+#btnFilter svg{width:18px;height:18px}
+#btnFilter.on{border-color:var(--primary);color:#93c5fd}
+.fbadge{background:var(--primary);color:#fff;font-size:.68rem;border-radius:999px;padding:1px 6px;margin-left:2px}
+.filter-panel{border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px}
+.found{font-size:.84rem;color:var(--muted);margin:2px 2px 10px}
+.found b{color:var(--text)}
+body.paid-mode #btnFilter,body.paid-mode #filterPanel{display:none!important}
+
+#tab3 .card,#tab4 .card{border:0;padding:4px 0 0}
+#tab3 .subnav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+#tab3 .sub-btn{text-align:center}
+@media (max-width:700px){ .tbl th,.tbl td{padding:9px 8px;font-size:.84rem} .tbl td.nm{max-width:150px} }
+
+/* AVISO DE INSTALACIÓN (muy visible antes de instalar) */
+.install-bar{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#059669,#10b981 55%,#22c55e);border-radius:16px;padding:12px 14px;margin-bottom:14px;box-shadow:0 10px 26px rgba(16,185,129,.35);position:relative}
+.install-bar img{width:46px;height:46px;border-radius:12px;flex:none;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+.ib-txt{flex:1;min-width:0;color:#fff}
+.ib-txt b{display:block;font-size:1rem}
+.ib-txt span{display:block;font-size:.8rem;opacity:.92;line-height:1.3}
+.btn-install{background:#fff;color:#047857;border:0;font-weight:800;font-size:.95rem;padding:12px 16px;border-radius:12px;cursor:pointer;white-space:nowrap;animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}50%{box-shadow:0 0 0 8px rgba(255,255,255,0)}}
+.ib-x{position:absolute;top:-8px;right:-6px;width:26px;height:26px;border-radius:50%;border:0;background:#064e3b;color:#d1fae5;font-size:1rem;line-height:1;cursor:pointer}
+.inst-steps{font-size:.9rem;color:#cbd5e1;line-height:1.6;padding-left:20px;margin:6px 0 4px}
+.inst-steps li.me{color:#fff;font-weight:600}
+@media (max-width:420px){ .install-bar{flex-wrap:wrap} .btn-install{width:100%} }
+
 /* VENTANAS Y BOTONES FLOTANTES */
 .modal{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:300;padding:16px}
 .modal-box{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px 22px;width:100%;max-width:390px;box-shadow:0 25px 60px rgba(0,0,0,.55)}
@@ -138,7 +173,6 @@ body.locked .list .row{grid-template-columns:34px minmax(0,1fr) 112px 108px 36px
 .fab:hover{transform:translateY(-2px)}
 .fab svg{width:28px;height:28px}
 .fab.help{right:auto;left:24px;width:46px;height:46px;border-radius:14px;font-size:1.25rem;background:#334155;box-shadow:0 8px 18px rgba(0,0,0,.35)}
-body.on-tab1 #fabAdd{display:none}
 
 /* PESTAÑAS */
 .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;background:var(--panel);padding:6px;border-radius:12px;border:1px solid var(--border);margin-bottom:14px}
@@ -323,7 +357,7 @@ select option{background:#0f172a;color:var(--text)}
       <div class="avatar"><img src="icons/logo.png" alt="Logo" /></div>
       <div class="hero-btns">
         <button type="button" class="icon-btn" id="btnGear" aria-label="Ajustes"><span data-ic="gear"></span></button>
-        <button type="button" class="chip-hero" id="btnInstall" hidden>📲 Instalar</button>
+        <button type="button" class="chip-hero" id="btnInstall" hidden style="background:#10b981;border-color:#10b981;color:#fff">📲 Instalar</button>
       </div>
     </div>
     <div class="hero-chips">
@@ -337,6 +371,13 @@ select option{background:#0f172a;color:var(--text)}
       <div class="pill"><span>Hoy</span><strong id="lblToday">Q0.00</strong></div>
     </div>
   </header>
+
+  <div class="install-bar" id="installBar" hidden>
+    <img src="icons/icon-192.png" alt="" />
+    <div class="ib-txt"><b>📲 Instala la app</b><span>Tenla en tu pantalla como una aplicación. Abre rápido y funciona sin internet.</span></div>
+    <button type="button" class="btn-install" id="btnInstallBig">Instalar ahora</button>
+    <button type="button" class="ib-x" id="ibClose" aria-label="Cerrar">×</button>
+  </div>
 
   <!-- PESTAÑAS -->
   <nav class="tabs" id="tabs">
@@ -393,7 +434,7 @@ select option{background:#0f172a;color:var(--text)}
       <button type="button" class="btn btn-primary" id="btnUnlock">🔑 Ingresar contraseña</button>
     </div>
     <div class="card">
-      <div class="card-h"><h2 id="formTitle">Agregar colaboración</h2><span class="muted small" id="todayLbl"></span></div>
+      <div class="card-h"><h2 id="formTitle">Agregar colaboración</h2><span id="todayLbl" hidden></span></div>
       <form id="mainForm" autocomplete="off" novalidate><fieldset id="formFs">
         <input type="hidden" id="editId" />
         <div class="grid-2">
@@ -407,7 +448,6 @@ select option{background:#0f172a;color:var(--text)}
             <input type="number" id="inpAmount" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="done" />
           </div>
         </div>
-        <div class="chips" id="amtChips"></div>
         <div class="field">
           <label for="inpDate">Fecha</label>
           <div class="date-ctrl">
@@ -420,22 +460,22 @@ select option{background:#0f172a;color:var(--text)}
         <p class="hint" id="dateHint"></p>
         <label class="check"><input type="checkbox" id="inpPaid" /> Marcar como pagado (rojo)</label>
         <div class="actions">
-          <button type="submit" class="btn btn-green grow" id="btnSubmit">✔ Guardar colaboración</button>
+          <button type="submit" class="btn btn-green grow" id="btnSubmit">➕ Agregar</button>
           <button type="button" class="btn" id="btnCancel" hidden>Cancelar edición</button>
         </div>
       </fieldset></form>
-    </div>
-    <div class="card">
-      <div class="card-h"><h2>Recién agregados</h2><span class="muted small" id="recentInfo"></span></div>
-      <div class="list" id="recentList"></div>
     </div>
   </section>
 
   <!-- 2: LISTA -->
   <section id="tab2" class="panel">
-    <div class="card">
+    <h2 class="page-t" id="listTitle" hidden>✅ Pagados</h2>
+    <div class="search-row">
+      <div class="search-box"><span data-ic="search"></span><input type="search" id="fltSearch" placeholder="Buscar nombre…" aria-label="Buscar nombre" /></div>
+      <button type="button" class="btn" id="btnFilter"><span data-ic="filter"></span> Filtrar<b class="fbadge" id="fBadge" hidden></b></button>
+    </div>
+    <div class="filter-panel" id="filterPanel" hidden>
       <div class="filters">
-        <div class="field span2"><label for="fltSearch">Buscar por nombre</label><input type="search" id="fltSearch" placeholder="Buscar nombre…" /></div>
         <div class="contents" id="fltPeriod"></div>
         <div class="field"><label for="fltDow">Día de semana</label>
           <select id="fltDow"><option value="ALL">Todos</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option><option value="0">Domingo</option></select></div>
@@ -447,40 +487,35 @@ select option{background:#0f172a;color:var(--text)}
       <div class="filter-foot">
         <label class="check"><input type="checkbox" id="fltGroup" checked /> Agrupar por día</label>
         <div class="btns">
-          <button type="button" class="btn btn-sm" id="btnClearFlt">Limpiar filtros</button>
+          <button type="button" class="btn btn-sm" id="btnClearFlt">Limpiar</button>
           <button type="button" class="btn btn-sm btn-primary" id="btnListReport">🖼️ Reporte de esta vista</button>
         </div>
       </div>
-      <div class="sumbar">
-        <span>Registros: <b id="fltCount">0</b></span>
-        <span>Suma: <b id="fltSum" class="c-blue">Q0.00</b></span>
-        <span>Pagado: <b id="fltPaidSum" class="c-red">Q0.00</b></span>
-      </div>
-      <div class="list" id="listBox"></div>
-      <div class="more"><button type="button" class="btn" id="btnMore" hidden>Mostrar más</button></div>
     </div>
+    <p class="found" id="fltInfo" hidden><b id="fltCount">0</b> encontrados · <b id="fltSum">Q0.00</b><span id="fltPaidWrap"> · pagado <b id="fltPaidSum" class="c-red">Q0.00</b></span></p>
+    <div class="list" id="listBox"></div>
+    <div class="more"><button type="button" class="btn" id="btnMore" hidden>Mostrar más</button></div>
   </section>
 
   <!-- 3: RESUMEN -->
   <section id="tab3" class="panel">
     <div class="card">
       <div class="filters"><div class="contents" id="sumPeriod"></div></div>
-      <div class="stats">
+      <div class="stats" hidden>
         <div class="stat"><span>🔼 Mayor colaborador</span><strong id="stMax">-</strong></div>
         <div class="stat"><span>🔽 Menor colaborador</span><strong id="stMin">-</strong></div>
         <div class="stat"><span>💰 Aporte más alto</span><strong id="stTop">-</strong></div>
         <div class="stat"><span>📈 Promedio por aporte</span><strong id="stAvg">-</strong></div>
       </div>
       <div class="subnav" id="subnav">
-        <button type="button" class="sub-btn active" data-sub="Rank">🏆 Por persona</button>
-        <button type="button" class="sub-btn" data-sub="Day">📆 Por día</button>
-        <button type="button" class="sub-btn" data-sub="Month">📅 Por mes</button>
-        <button type="button" class="sub-btn" data-sub="Year">🗓 Por año</button>
+        <button type="button" class="sub-btn active" data-sub="Rank">Persona</button>
+        <button type="button" class="sub-btn" data-sub="Day">Día</button>
+        <button type="button" class="sub-btn" data-sub="Month">Mes</button>
+        <button type="button" class="sub-btn" data-sub="Year">Año</button>
       </div>
       <div id="subRank">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px">
-          <span class="muted small">Ordenado automáticamente</span>
-          <select id="selSortRank" style="width:auto;padding:7px 12px"><option value="DESC">De mayor a menor</option><option value="ASC">De menor a mayor</option></select>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <select id="selSortRank" style="width:auto;padding:7px 12px;font-size:14px"><option value="DESC">Mayor a menor</option><option value="ASC">Menor a mayor</option></select>
         </div>
         <div class="tbl-box"><table class="tbl"><thead><tr><th>#</th><th>Nombre</th><th class="r">Aportes</th><th class="r">Total</th></tr></thead><tbody id="tbRank"></tbody></table></div>
       </div>
@@ -494,14 +529,6 @@ select option{background:#0f172a;color:var(--text)}
   <section id="tab4" class="panel">
     <div class="card">
       <div class="card-h"><h2>🖼️ Reporte en imagen</h2></div>
-      <div class="chips" id="repQuick">
-        <button type="button" class="chip" data-q="today">Hoy</button>
-        <button type="button" class="chip" data-q="yesterday">Ayer</button>
-        <button type="button" class="chip" data-q="week">Esta semana</button>
-        <button type="button" class="chip" data-q="thisMonth">Este mes</button>
-        <button type="button" class="chip" data-q="thisYear">Este año</button>
-        <button type="button" class="chip" data-q="range">Intervalo…</button>
-      </div>
       <div class="filters">
         <div class="contents" id="repPeriod"></div>
         <div class="field"><label for="repPaid">Incluir</label>
@@ -588,7 +615,7 @@ select option{background:#0f172a;color:var(--text)}
       <p class="muted small" style="margin-top:12px" id="storageInfo"></p>
     </div>
 
-    <div class="card">
+    <div class="card" id="cardInstall">
       <div class="card-h"><h2>📲 Instalar la app</h2></div>
       <ul class="info-list">
         <li><b>Android (Chrome):</b> toca <b>📲 Instalar</b> arriba, o menú ⋮ → <b>Instalar aplicación</b>.</li>
@@ -602,7 +629,6 @@ select option{background:#0f172a;color:var(--text)}
 </div>
 
 <button type="button" class="fab help" id="fabHelp" aria-label="Ayuda">?</button>
-<button type="button" class="fab" id="fabAdd" aria-label="Agregar colaboración"><span data-ic="plus"></span></button>
 
 <div class="modal" id="passModal" hidden>
   <div class="modal-box">
@@ -633,11 +659,21 @@ select option{background:#0f172a;color:var(--text)}
   </div>
 </div>
 
+<div class="modal" id="installModal" hidden>
+  <div class="modal-box">
+    <div class="modal-ic"><span data-ic="save"></span></div>
+    <h3>Instalar Ofrenda y Donaciones</h3>
+    <p class="muted small">Sigue estos pasos en tu dispositivo:</p>
+    <ol class="inst-steps" id="instSteps"></ol>
+    <div class="actions"><button type="button" class="btn btn-primary grow" id="instClose">Entendido</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 'use strict';
-var APP_VERSION = '4.3.0';
+var APP_VERSION = '4.4.0';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -997,6 +1033,8 @@ function groupBy(recs, keyFn) {
 var ICONS = {
   home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  filter: '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
   check: '<path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14l-3-3"/>',
   chart: '<path d="M3 3v18h18"/><path d="M7 16v-4M12 16V8M17 16v-7"/>',
@@ -1073,23 +1111,23 @@ function switchTab(n) {
   n = String(n);
   document.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === n); });
   for (var i = 0; i <= 5; i++) $('tab' + i).classList.toggle('active', String(i) === n);
-  document.body.classList.toggle('on-tab1', n === '1');
+  document.body.dataset.tab = n;
   UI.tab = n; lsSet(LS.ui, UI);
   if (n === '5') { renderSyncUI(); renderStorageInfo(); }
   if (n === '4' && !$('repPreview').hidden) generateReport(true);
   window.scrollTo({ top: 0 });
 }
-$('tabs').addEventListener('click', function (e) { var b = e.target.closest('.tab'); if (b) switchTab(b.dataset.tab); });
+$('tabs').addEventListener('click', function (e) { var b = e.target.closest('.tab'); if (!b) return; if (b.dataset.tab === '2') setListMode('all'); switchTab(b.dataset.tab); });
 $('syncChip').addEventListener('click', function () { switchTab(5); });
 $('btnGear').addEventListener('click', function () { switchTab(5); });
 document.addEventListener('click', function (e) {
   var g = e.target.closest('[data-go]'); if (!g) return;
   var v = g.dataset.go;
-  if (v === 'paid') { fltPicker.setType('all'); $('fltPaid').value = 'PAID'; listLimit = 200; renderList(); switchTab(2); return; }
+  if (v === 'paid') { setListMode('paid'); switchTab(2); return; }
+  if (v === '2') setListMode('all');
   if (v === '1') { switchTab(1); if (!canEdit()) openPass('edit', function () { $('inpName').focus(); }); return; }
   switchTab(v);
 });
-$('fabAdd').addEventListener('click', function () { requireEdit(function () { switchTab(1); $('inpName').focus(); }); });
 $('fabHelp').addEventListener('click', function () { $('helpVer').textContent = APP_VERSION; $('helpModal').hidden = false; });
 $('helpClose').addEventListener('click', function () { $('helpModal').hidden = true; });
 $('helpModal').addEventListener('click', function (e) { if (e.target === this) this.hidden = true; });
@@ -1138,8 +1176,6 @@ function renderHome() {
 
 /* ===================== FORMULARIO ===================== */
 var dateFixed = false, keepDate = null;
-$('amtChips').innerHTML = QUICK_AMOUNTS.map(function (a) { return '<button type="button" class="chip" data-amt="' + a + '">Q' + a + '</button>'; }).join('');
-$('amtChips').addEventListener('click', function (e) { var c = e.target.closest('[data-amt]'); if (!c) return; $('inpAmount').value = c.dataset.amt; $('inpAmount').focus(); });
 
 function setDate(s, fixed) { $('inpDate').value = s; dateFixed = fixed; updateDateHint(); }
 function updateDateHint() {
@@ -1218,7 +1254,7 @@ $('mainForm').addEventListener('submit', function (e) {
 function resetFormMode() {
   $('formTitle').textContent = 'Agregar colaboración';
   $('editId').value = ''; $('inpName').value = ''; $('inpAmount').value = ''; $('inpPaid').checked = false;
-  $('btnSubmit').textContent = '✔ Guardar colaboración'; $('btnCancel').hidden = true;
+  $('btnSubmit').textContent = '➕ Agregar'; $('btnCancel').hidden = true;
   if (!dateFixed) setDate(todayISO(), false); else updateDateHint();
   if (keepDate) { setDate(keepDate.d, keepDate.f); keepDate = null; }
 }
@@ -1258,11 +1294,28 @@ function onRowAction(e) {
   else if (act.dataset.act === 'edit' && e.type === 'click') requireEdit(function () { startEdit(id); });
   else if (act.dataset.act === 'del' && e.type === 'click') requireEdit(function () { if (confirm('¿Borrar el registro de ' + r.name + ' (' + fmtQ(r.amount) + ')?')) { removeRec(id); toast('🗑 Registro borrado'); } });
 }
-['listBox', 'recentList'].forEach(function (id) { $(id).addEventListener('click', onRowAction); $(id).addEventListener('change', onRowAction); });
+['listBox'].forEach(function (id) { $(id).addEventListener('click', onRowAction); $(id).addEventListener('change', onRowAction); });
 
 var fltPicker, sumPicker, repPicker;
+var listMode = 'all';
+function setListMode(m) {
+  listMode = m; document.body.classList.toggle('paid-mode', m === 'paid');
+  $('listTitle').hidden = m !== 'paid'; $('fltSearch').value = ''; listLimit = 200;
+  if (m === 'paid') $('filterPanel').hidden = true;
+  renderList();
+}
+function activeFilters() {
+  var n = 0;
+  if (fltPicker.getState().t !== 'all') n++;
+  if ($('fltDow').value !== 'ALL') n++;
+  if ($('fltPaid').value !== 'ALL') n++;
+  if ($('fltSort').value !== 'dateDesc') n++;
+  return n;
+}
+$('btnFilter').addEventListener('click', function () { var fp = $('filterPanel'); fp.hidden = !fp.hidden; this.classList.toggle('on', !fp.hidden || activeFilters() > 0); });
 function filteredList() {
-  var q = norm($('fltSearch').value), p = fltPicker.get(), dow = $('fltDow').value, st = $('fltPaid').value;
+  var q = norm($('fltSearch').value), paidOnly = listMode === 'paid';
+  var p = paidOnly ? { from: null, to: null } : fltPicker.get(), dow = paidOnly ? 'ALL' : $('fltDow').value, st = paidOnly ? 'PAID' : $('fltPaid').value;
   return activeRecs().filter(function (r) {
     if (q && norm(r.name).indexOf(q) === -1) return false;
     if (!inPeriod(r, p)) return false;
@@ -1285,12 +1338,17 @@ function renderList() {
   var html = '', lastDate = null, shown = Math.min(recs.length, listLimit);
   for (var i = 0; i < shown; i++) {
     var r = recs[i];
-    if (group && r.date !== lastDate) { lastDate = r.date; html += '<div class="grp"><span>' + fmtShort(r.date) + '</span><span>' + dayTot[r.date].c + ' · ' + fmtQ(dayTot[r.date].t) + '</span></div>'; }
+    if (group && r.date !== lastDate) { lastDate = r.date; html += '<div class="grp"><span>' + fmtShort(r.date) + '</span><span>' + (dayTot[r.date].c > 1 ? dayTot[r.date].c + ' · ' + fmtQ(dayTot[r.date].t) : '') + '</span></div>'; }
     html += rowHTML(r, i + 1, !group);
   }
   $('listBox').innerHTML = html || '<div class="empty">No hay registros en esta vista</div>';
   $('btnMore').hidden = recs.length <= listLimit;
   $('btnMore').textContent = 'Mostrar más (' + (recs.length - shown) + ' restantes)';
+  var nf = listMode === 'paid' ? 0 : activeFilters(), searching = !!$('fltSearch').value.trim();
+  $('fBadge').hidden = !nf; $('fBadge').textContent = nf;
+  $('btnFilter').classList.toggle('on', nf > 0 || !$('filterPanel').hidden);
+  $('fltInfo').hidden = !(searching || nf);       // solo se muestra lo que buscas
+  $('fltPaidWrap').hidden = listMode === 'paid';
   $('fltCount').textContent = recs.length;
   $('fltSum').textContent = fmtQ(sum(recs));
   $('fltPaidSum').textContent = fmtQ(sum(recs.filter(function (r) { return r.paid; })));
@@ -1306,12 +1364,6 @@ $('btnListReport').addEventListener('click', function () {
   switchTab(4); generateReport();
 });
 
-function renderRecent() {
-  var recs = activeRecs().sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 6);
-  $('recentList').innerHTML = recs.length ? recs.map(function (r, i) { return rowHTML(r, i + 1, true); }).join('') : '<div class="empty">Aún no hay registros. ¡Agrega el primero!</div>';
-  var td = activeRecs().filter(function (r) { return r.date === todayISO(); });
-  $('recentInfo').textContent = 'Hoy: ' + td.length + ' · ' + fmtQ(sum(td));
-}
 
 /* ===================== RESÚMENES ===================== */
 var curSub = 'Rank';
@@ -1353,12 +1405,7 @@ var LOGO = new Image(); LOGO.src = 'icons/logo.png'; LOGO.onload = function () {
 if (!UI.repTitle || UI.repTitle === 'Maratón — Colaboraciones') UI.repTitle = 'Ofrenda y Donaciones';
 $('repTitle').value = UI.repTitle;
 $('repTitle').addEventListener('change', function () { UI.repTitle = this.value; lsSet(LS.ui, UI); });
-$('repQuick').addEventListener('click', function (e) {
-  var c = e.target.closest('[data-q]'); if (!c) return;
-  repPicker.setType(c.dataset.q);
-  if (c.dataset.q === 'range') { $('repFrom').focus(); return; }
-  generateReport();
-});
+
 $('btnGenRep').addEventListener('click', function () { generateReport(); });
 
 function buckets(recs, p) {
@@ -1682,14 +1729,46 @@ window.addEventListener('offline', function () { if (Sync.room) Sync.setState('o
 
 /* ===================== INSTALACIÓN / ACTUALIZACIÓN ===================== */
 var deferredPrompt = null;
-var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
-window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferredPrompt = e; if (!isStandalone) $('btnInstall').hidden = false; });
-window.addEventListener('appinstalled', function () { $('btnInstall').hidden = true; deferredPrompt = null; toast('📲 App instalada'); });
-$('btnInstall').addEventListener('click', function () {
-  if (!deferredPrompt) { switchTab(5); return; }
-  deferredPrompt.prompt(); deferredPrompt.userChoice.finally(function () { deferredPrompt = null; $('btnInstall').hidden = true; });
+function isStandalone() { return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+/* Una vez instalada, se quita todo lo de instalar */
+function setInstalledUI() {
+  if (isStandalone()) { UI.installed = true; lsSet(LS.ui, UI); }
+  var installed = isStandalone() || !!UI.installed;
+  $('cardInstall').hidden = installed;
+  $('btnInstall').hidden = installed || !(deferredPrompt || isIOS);
+  var closed = false; try { closed = sessionStorage.getItem('ibClosed') === '1'; } catch (e) {}
+  $('installBar').hidden = installed || closed;
+}
+function showInstallSteps() {
+  var ua = navigator.userAgent, android = /android/i.test(ua);
+  var steps = isIOS
+    ? ['Abre esta página en <b>Safari</b>.', 'Toca el botón <b>Compartir</b> ⬆ (abajo en el centro).', 'Elige <b>Agregar a pantalla de inicio</b> y toca <b>Agregar</b>.']
+    : android
+      ? ['Abre esta página en <b>Chrome</b>.', 'Toca el menú <b>⋮</b> (arriba a la derecha).', 'Elige <b>Instalar aplicación</b> o <b>Agregar a pantalla principal</b>.']
+      : ['Abre esta página en <b>Chrome</b> o <b>Edge</b>.', 'Haz clic en el ícono de <b>instalar</b> 🖥️⬇ al final de la barra de direcciones (o menú ⋮ → <b>Instalar Ofrenda y Donaciones</b>).', 'Confirma con <b>Instalar</b>.'];
+  if (!/^https?:/.test(location.protocol)) steps.unshift('<b>Importante:</b> abre la app desde su enlace de internet (GitHub Pages), no como archivo.');
+  $('instSteps').innerHTML = steps.map(function (t) { return '<li>' + t + '</li>'; }).join('');
+  $('installModal').hidden = false;
+}
+function doInstall() {
+  if (!deferredPrompt) { showInstallSteps(); return; }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(function (c) { if (c && c.outcome === 'accepted') { UI.installed = true; lsSet(LS.ui, UI); } }).finally(function () { deferredPrompt = null; setInstalledUI(); });
+}
+$('btnInstallBig').addEventListener('click', doInstall);
+$('ibClose').addEventListener('click', function () { try { sessionStorage.setItem('ibClosed', '1'); } catch (e) {} $('installBar').hidden = true; });
+$('instClose').addEventListener('click', function () { $('installModal').hidden = true; });
+$('installModal').addEventListener('click', function (e) { if (e.target === this) this.hidden = true; });
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault(); deferredPrompt = e;
+  if (!isStandalone()) { UI.installed = false; lsSet(LS.ui, UI); }   // si la desinstalaron, vuelve a ofrecerse
+  setInstalledUI();
 });
-if (!isStandalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) $('btnInstall').hidden = false;
+window.addEventListener('appinstalled', function () { deferredPrompt = null; UI.installed = true; lsSet(LS.ui, UI); setInstalledUI(); toast('📲 App instalada'); });
+if (window.matchMedia) { var mq = window.matchMedia('(display-mode: standalone)'); if (mq.addEventListener) mq.addEventListener('change', setInstalledUI); }
+$('btnInstall').addEventListener('click', doInstall);
+setInstalledUI();
 
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
   window.addEventListener('load', function () {
@@ -1721,7 +1800,7 @@ function refreshAll() {
   $('heroCount').textContent = recs.length; $('heroToday').textContent = fmtQ(sum(recs.filter(function (r) { return r.date === td; })));
   renderHome();
   fltPicker.refreshYears(); sumPicker.refreshYears(); repPicker.refreshYears();
-  renderRecent(); renderList(); renderSummaries();
+  renderList(); renderSummaries();
   if ($('tab5').classList.contains('active')) renderStorageInfo();
 }
 

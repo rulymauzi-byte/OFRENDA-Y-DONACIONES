@@ -42,34 +42,23 @@ App web instalable (PWA) para registrar colaboraciones del maratón. Funciona en
 - **iPhone (Safari):** Compartir ⬆ → *Agregar a pantalla de inicio*.
 - **PC (Chrome/Edge):** ícono de instalar en la barra de direcciones.
 
-## 3) Activar la sincronización (una sola vez, unos 5 minutos)
+## 3) Sincronización (ya configurada para el proyecto `maraton-de-ofrenda`)
 
-Los datos viajan **por internet** (Firebase de Google, gratis). El otro dispositivo puede estar en otra casa, ciudad o país: **no hace falta estar cerca ni escanear nada**.
+`config.js` ya trae la configuración de Firebase, la clave del equipo y el usuario editor. Solo falta dejar listo Firebase **una vez**:
 
-1. Entra a <https://console.firebase.google.com> → **Agregar proyecto** (puedes desactivar Analytics).
-2. **Authentication → Comenzar → Método de acceso → Anónimo → Habilitar.**
-3. **Firestore Database → Crear base de datos** (ubicación cercana, p. ej. `us-central`). En la pestaña **Reglas** pega el contenido de `firestore.rules` y **Publica**.
-4. **Configuración del proyecto ⚙ → Tus apps → Web `</>`** → registra la app → copia el bloque `firebaseConfig`.
-5. Pégalo en **`config.js`** (en `window.FIREBASE_CONFIG = {...}`) **antes de subir a GitHub**. Así todos los dispositivos ya lo traen.
-6. En la app: **Ajustes → Paso 2 → escribe una clave del equipo** (o toca *Generar*) → **Conectar**.
-7. En cualquier otro celular o PC, esté donde esté:
-   - abre tu enlace de GitHub Pages → **Ajustes** → escribe **la misma clave** → **Conectar**, o
-   - toca **📤 Enviar invitación** en el primer dispositivo y mándala por WhatsApp: al abrir el enlace se conecta solo.
+1. **Authentication → Método de acceso:** activa **Anónimo** y también **Correo electrónico/contraseña** (solo el primer interruptor).
+2. **Authentication → Usuarios → Agregar usuario:**
+   - Correo: `editor@ofrenda-tvbethel.com`
+   - Contraseña: `tvbethel.com123` (la misma contraseña de edición de la app)
+3. **Firestore Database → Reglas:** pega el contenido de `firestore.rules` y toca **Publicar**. (Es *Firestore Database*, no *Realtime Database*.)
 
-En segundos aparece toda la lista, y desde ahí cada registro nuevo, cambio o borrado llega a todos. El indicador de arriba dice **● Sincronizado** cuando todo está al día. Si un dispositivo ya tenía datos, se **unen** con los del equipo; no se pierde nada.
+Listo. Cada dispositivo que abra la app desde GitHub Pages se conecta solo y ve la lista. Cuando alguien escribe la contraseña de edición, ese dispositivo entra como editor y sus registros se suben a la nube y llegan a todos en segundos.
 
-> **iPhone:** la app instalada tiene memoria separada de Safari. Instálala primero y escribe la clave dentro de la app instalada.
-
-### Conexión automática sin escribir nada (opcional)
-Si en `config.js` pones `window.SYNC_CLAVE = 'tu-clave';`, todos los dispositivos se conectan solos al abrir la app.
-⚠ Úsalo solo si el repositorio es **privado**; en uno público cualquiera podría leer la clave y entrar a tu lista.
-
-### Seguridad
-- La `apiKey` de Firebase **no es secreta**; lo que protege los datos son las reglas y la **clave del equipo**.
-- Comparte la clave solo con tu equipo. Para una lista nueva separada, usa otra clave.
-
-### Sobre las contraseñas
-Protegen la app contra cambios por error o de personas sin permiso, pero como todo el código está en GitHub, alguien con conocimientos técnicos podría saltarlas. Para cambiarlas, pídele a Claude que genere las nuevas huellas (`EDIT_HASH` / `VIEW_HASH` en `index.html`).
+### Seguridad con repositorio público
+- Cualquiera que abra la app puede **ver** la lista (así lo pediste: ver no lleva contraseña).
+- Solo quien sepa la **contraseña de edición** puede agregar, cambiar o borrar. Esto lo protege Firebase con el usuario editor, no solo la app, así que aunque alguien copie el código de GitHub no puede modificar los datos.
+- La contraseña no está escrita en ningún archivo del repositorio.
+- Si cambias la contraseña de edición, cámbiala también en Firebase → Authentication → Usuarios.
 
 ## Actualizar la app
 
