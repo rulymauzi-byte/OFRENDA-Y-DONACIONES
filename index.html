@@ -120,7 +120,7 @@ body.locked .lock-banner{display:flex}
 fieldset{border:0;min-width:0}
 fieldset:disabled{opacity:.45}
 body.locked .row .acts{display:none}
-body.locked .list .row{grid-template-columns:34px minmax(0,1fr) 112px 108px 36px;grid-template-areas:"n nm dt amt pd"}
+body.locked .list .row{grid-template-columns:30px 30px minmax(0,1fr) 112px 108px;grid-template-areas:"pd n nm dt amt"}
 .unlock-lbl{font-size:.78rem;color:#6ee7b7}
 
 /* PÁGINAS LIMPIAS: la cabecera con totales solo en Principal */
@@ -235,13 +235,13 @@ input[type=date]{color-scheme:dark}
 .filter-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .filter-foot .btns{display:flex;gap:8px;flex-wrap:wrap}
 .list{border:1px solid var(--border);border-radius:10px;background:var(--input-bg);overflow:hidden}
-.row{display:grid;grid-template-columns:34px minmax(0,1fr) 112px 108px 36px 80px;grid-template-areas:"n nm dt amt pd ac";align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:.9rem}
+.row{display:grid;grid-template-columns:30px 30px minmax(0,1fr) 112px 108px 80px;grid-template-areas:"pd n nm dt amt ac";align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:.9rem}
 .row:last-child{border-bottom:0}
 .row .n{grid-area:n;color:var(--muted);font-size:.78rem;font-weight:700}
 .row .nm{grid-area:nm;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .dt{grid-area:dt;color:var(--muted);font-size:.8rem;white-space:nowrap;font-variant-numeric:tabular-nums}
 .row .amt{grid-area:amt;font-weight:700;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-.row .pd{grid-area:pd;display:flex;justify-content:center}
+.row .pd{grid-area:pd;display:flex;justify-content:flex-start}
 .row .acts{grid-area:ac;display:flex;gap:4px;justify-content:flex-end}
 .row.paid{background:var(--red-bg);color:#fecaca}
 .row.paid .n,.row.paid .dt{color:#fca5a5}
@@ -295,6 +295,12 @@ details[open] summary{margin-bottom:10px}
 /* MISMO FONDO EN TODA LA APP */
 .card,.tabs,.list,.sumbar,.tbl-box,.stat,details,.tbl th,.row,.mk,.hero,.lock-banner,input,select,textarea,.chip,.chip-hero,.hero .sync-chip,.seg button:not(.active),.sub-btn:not(.active){background:transparent}
 .grp{background:rgba(13,24,56,.94)}
+input,select,textarea{background:#000!important;border-color:#334155}
+input:focus,select:focus,textarea:focus{border-color:var(--primary)}
+.search-box input{background:#000!important}
+.amt-row{display:flex;gap:8px}
+.amt-row input{flex:1;min-width:0;font-size:1.15rem;font-weight:700}
+.amt-row .btn{padding:0 22px;font-size:1rem;border-radius:10px;flex:none}
 
 /* Degradado de fondo */
 html{background:#0b1229}
@@ -320,7 +326,7 @@ select option{background:#0f172a;color:var(--text)}
   .fab{bottom:calc(84px + var(--safe-b));right:16px;width:56px;height:56px}
   .fab.help{left:16px;width:44px;height:44px}
   .lock-banner{flex-direction:column;align-items:stretch;text-align:center}
-  body.locked .list .row{grid-template-columns:20px minmax(0,1fr) auto 26px;grid-template-areas:"n nm amt pd" "n dt amt pd"}
+  body.locked .list .row{grid-template-columns:26px 22px minmax(0,1fr) auto;grid-template-areas:"pd n nm amt" "pd n dt amt"}
   .list.top5 .row,body.locked .list.top5 .row{grid-template-columns:20px minmax(0,1fr) auto;grid-template-areas:"n nm amt" "n dt amt"}
   .stats{grid-template-columns:1fr 1fr}
   .grid-2{grid-template-columns:1fr}
@@ -331,7 +337,7 @@ select option{background:#0f172a;color:var(--text)}
   .tab .ti{font-size:1.2rem;line-height:1}
   .tab .ti svg{width:22px;height:22px}
   .tab.active{box-shadow:none}
-  .row{grid-template-columns:20px minmax(0,1fr) auto 26px auto;grid-template-areas:"n nm amt pd ac" "n dt amt pd ac";row-gap:0;column-gap:6px;padding:8px 8px 8px 10px}
+  .row{grid-template-columns:26px 22px minmax(0,1fr) auto auto;grid-template-areas:"pd n nm amt ac" "pd n dt amt ac";row-gap:0;column-gap:6px;padding:8px 8px 8px 10px}
   .row .dt{font-size:.74rem;margin-top:1px}
   .row .dt:empty{display:none}
   .row .acts .btn{padding:5px 7px;font-size:.78rem}
@@ -437,15 +443,16 @@ select option{background:#0f172a;color:var(--text)}
       <div class="card-h"><h2 id="formTitle">Agregar colaboración</h2><span id="todayLbl" hidden></span></div>
       <form id="mainForm" autocomplete="off" novalidate><fieldset id="formFs">
         <input type="hidden" id="editId" />
-        <div class="grid-2">
-          <div class="field">
-            <label for="inpName">Nombre (persona, familia o empresa)</label>
-            <input type="text" id="inpName" placeholder="Ej. Raúl" autocapitalize="words" enterkeyhint="next" spellcheck="false" />
-            <div id="autoBox" class="ac" role="listbox"></div>
-          </div>
-          <div class="field">
-            <label for="inpAmount">Cantidad (Q)</label>
+        <div class="field" style="margin-bottom:12px">
+          <label for="inpName">Nombre (persona, familia o empresa)</label>
+          <input type="text" id="inpName" placeholder="Ej. Raúl" autocapitalize="words" enterkeyhint="next" spellcheck="false" />
+          <div id="autoBox" class="ac" role="listbox"></div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label for="inpAmount">Cantidad (Q)</label>
+          <div class="amt-row">
             <input type="number" id="inpAmount" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="done" />
+            <button type="submit" class="btn btn-green" id="btnSubmit">➕ Agregar</button>
           </div>
         </div>
         <div class="field">
@@ -460,8 +467,7 @@ select option{background:#0f172a;color:var(--text)}
         <p class="hint" id="dateHint"></p>
         <label class="check"><input type="checkbox" id="inpPaid" /> Marcar como pagado (rojo)</label>
         <div class="actions">
-          <button type="submit" class="btn btn-green grow" id="btnSubmit">➕ Agregar</button>
-          <button type="button" class="btn" id="btnCancel" hidden>Cancelar edición</button>
+          <button type="button" class="btn grow" id="btnCancel" hidden>Cancelar edición</button>
         </div>
       </fieldset></form>
     </div>
@@ -482,7 +488,7 @@ select option{background:#0f172a;color:var(--text)}
         <div class="field"><label for="fltPaid">Estado</label>
           <select id="fltPaid"><option value="ALL">Todos</option><option value="PAID">Pagados (rojo)</option><option value="UNPAID">Pendientes</option></select></div>
         <div class="field"><label for="fltSort">Orden</label>
-          <select id="fltSort"><option value="dateDesc">Recientes primero</option><option value="dateAsc">Antiguos primero</option><option value="amtDesc">Mayor cantidad</option><option value="amtAsc">Menor cantidad</option><option value="name">Nombre A-Z</option></select></div>
+          <select id="fltSort"><option value="entry">Orden de ingreso (1 = primero)</option><option value="dateDesc">Recientes primero</option><option value="dateAsc">Fecha (antiguos primero)</option><option value="amtDesc">Mayor cantidad</option><option value="amtAsc">Menor cantidad</option><option value="name">Nombre A-Z</option></select></div>
       </div>
       <div class="filter-foot">
         <label class="check"><input type="checkbox" id="fltGroup" checked /> Agrupar por día</label>
@@ -561,7 +567,7 @@ select option{background:#0f172a;color:var(--text)}
         <summary>Paso 1 · Configuración de Firebase <span id="cfgState" class="small"></span></summary>
         <ol class="steps">
           <li>Entra a <b>console.firebase.google.com</b> y crea un proyecto (gratis).</li>
-          <li><b>Authentication</b> → Comenzar → activa el método <b>Anónimo</b>.</li>
+          <li><b>Authentication</b> → Comenzar → activa <b>Anónimo</b> y <b>Correo electrónico/contraseña</b>. En <b>Usuarios</b> agrega el usuario editor (ver README).</li>
           <li><b>Firestore Database</b> → Crear base de datos → en <b>Reglas</b> pega las del archivo <span class="code">firestore.rules</span>.</li>
           <li>Configuración del proyecto → Tus apps → <b>Web (&lt;/&gt;)</b> → copia el bloque <span class="code">firebaseConfig</span> y pégalo aquí.</li>
         </ol>
@@ -585,6 +591,7 @@ select option{background:#0f172a;color:var(--text)}
         <button type="button" class="btn btn-danger" id="btnDisconnect" hidden>Desconectar</button>
       </div>
       <p class="err" id="syncErr" hidden></p>
+      <p class="err" id="fileWarn" hidden>⚠ Estás abriendo la app como archivo de la computadora. Para sincronizar ábrela desde su enlace de internet (GitHub Pages).</p>
 
       <div id="linkBox" hidden>
         <h3>🌎 Agregar otro dispositivo (desde cualquier lugar)</h3>
@@ -673,7 +680,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '4.4.0';
+var APP_VERSION = '4.6.0';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -812,13 +819,14 @@ var Sync = {
           var appM = mods[0], authM = mods[1], fsM = mods[2];
           var app = appM.initializeApp(cfg);
           var db;
-          try { db = fsM.initializeFirestore(app, { localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }); }
-          catch (e) { db = fsM.getFirestore(app); }
+          try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true, localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }); }
+          catch (e) { try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }); } catch (e2) { db = fsM.getFirestore(app); } }
           self.fs = fsM; self.db = db; self.authM = authM; self.auth = authM.getAuth(app); self.appCfgKey = key;
         }
         if (self.auth.authStateReady) await self.auth.authStateReady();
         if (!self.auth.currentUser) await self.authM.signInAnonymously(self.auth);
         self.listen();
+        if (self.pendingPw) self.signInEditor(self.pendingPw);
       } catch (e) {
         console.error(e);
         if (!navigator.onLine || /network/i.test(String(e && (e.code || e.message)))) self.setState('offline', 'Sin conexión: se conectará al volver el internet.');
@@ -833,11 +841,28 @@ var Sync = {
     this.reconciled = false;
     this.col = fs.collection(this.db, 'rooms', this.room, 'records');
     this.ready = true;
+    clearTimeout(this.diagTimer);
+    this.diagTimer = setTimeout(function () { self.diagnose(); }, 12000);   // si no conecta en 12 s, averigua por qué
     this.unsub = fs.onSnapshot(this.col, { includeMetadataChanges: true }, function (snap) { self.onSnap(snap); },
       function (err) { console.error(err); self.ready = false; self.unsub = null; self.setState('error', humanErr(err)); });
   },
+  diagnose: function () {
+    var self = this, fs = this.fs;
+    if (!fs || !this.col || this.state === 'synced' || this.state === 'pending') return;
+    if (!navigator.onLine) { this.setState('offline', 'Sin internet: se conectará al volver la conexión.'); return; }
+    var timer = new Promise(function (_, rej) { setTimeout(function () { rej({ code: 'timeout' }); }, 12000); });
+    Promise.race([fs.getDocsFromServer(fs.query(this.col, fs.limit(1))), timer]).then(function () {
+      self.setState('synced');
+    }).catch(function (e) {
+      console.error('diagnóstico', e);
+      self.setState('error', e && e.code === 'timeout'
+        ? 'Firebase no responde. Revisa: 1) que creaste "Firestore Database" (no Realtime Database), 2) tu conexión a internet o antivirus. Luego toca Conectar.'
+        : humanErr(e));
+    });
+  },
   onSnap: function (snap) {
     var changed = false;
+    if (!snap.metadata.fromCache) clearTimeout(this.diagTimer);
     snap.docChanges().forEach(function (ch) {
       if (ch.type === 'removed') return;
       var data = ch.doc.data(); data.id = ch.doc.id;
@@ -845,7 +870,7 @@ var Sync = {
       var l = DB[r.id];
       if (!l || r.updatedAt > (l.updatedAt || 0)) { DB[r.id] = r; changed = true; }
     });
-    if (!this.reconciled && !snap.metadata.fromCache) {          // primera respuesta del servidor: subir lo local que falte o sea más nuevo
+    if (!this.reconciled && !snap.metadata.fromCache && this.isEditor()) {   // primera respuesta del servidor: el editor sube lo local que falte o sea más nuevo
       this.reconciled = true;
       var remote = {};
       snap.docs.forEach(function (d) { remote[d.id] = Number(d.data().updatedAt) || 0; });
@@ -857,8 +882,27 @@ var Sync = {
     if (!navigator.onLine || snap.metadata.fromCache) this.setState(snap.metadata.hasPendingWrites ? 'offline' : (navigator.onLine ? 'connecting' : 'offline'));
     else this.setState(snap.metadata.hasPendingWrites ? 'pending' : 'synced');
   },
+  /* Solo el usuario editor (contraseña de edición) puede escribir en la nube; los demás solo ven */
+  isEditor: function () { var u = this.auth && this.auth.currentUser; return !!(u && !u.isAnonymous); },
+  signInEditor: async function (pw) {
+    var email = String(window.EDITOR_EMAIL || '').trim();
+    if (!email) return;
+    if (!this.auth) { this.pendingPw = pw; return; }                       // Firebase aún cargando: se hace al terminar
+    if (this.isEditor()) { this.pendingPw = null; return; }
+    try {
+      await this.authM.signInWithEmailAndPassword(this.auth, email, pw);
+      this.pendingPw = null;
+      this.listen();                                                       // vuelve a revisar y sube lo pendiente
+      toast('☁ Editor conectado: los cambios se guardan en la nube');
+    } catch (e) {
+      var c = String(e && (e.code || e.message));
+      if (/network/i.test(c) || !navigator.onLine) { this.pendingPw = pw; this.setState('offline', 'Sin internet: los cambios se subirán al volver la conexión.'); }
+      else { this.pendingPw = null; this.setState('error', /invalid-credential|wrong-password|user-not-found|invalid-login/i.test(c) ? 'La nube no aceptó la contraseña. En Firebase → Authentication → Usuarios, el usuario ' + email + ' debe tener la contraseña de edición.' : humanErr(e)); }
+    }
+  },
   push: function (recs) {
     if (!this.ready || !this.col || !recs.length) return;
+    if (!this.isEditor()) return;                                          // se subirá al conectar como editor
     var fs = this.fs, self = this;
     for (var i = 0; i < recs.length; i += 400) {
       var b = fs.writeBatch(this.db);
@@ -875,11 +919,12 @@ var Sync = {
 };
 function humanErr(e) {
   var c = String((e && (e.code || e.message)) || e);
-  if (/permission-denied|insufficient permissions/i.test(c)) return 'Permiso denegado. Revisa que pegaste las reglas de firestore.rules y que el inicio de sesión Anónimo está activado.';
-  if (/operation-not-allowed|admin-restricted/i.test(c)) return 'Activa el método "Anónimo" en Firebase → Authentication → Método de acceso.';
+  if (/permission-denied|insufficient permissions/i.test(c)) return 'Permiso denegado. Revisa que publicaste las reglas de firestore.rules en Firestore Database y que están activados los accesos Anónimo y Correo/contraseña.';
+  if (/operation-not-allowed|admin-restricted/i.test(c)) return 'Activa los métodos "Anónimo" y "Correo electrónico/contraseña" en Firebase → Authentication → Método de acceso.';
   if (/api-key|invalid-api-key|API key/i.test(c)) return 'La configuración de Firebase no es válida (apiKey). Vuelve a copiarla.';
   if (/Failed to fetch|import|dynamically imported/i.test(c)) return 'No se pudo cargar Firebase. Revisa tu conexión a internet.';
-  if (/not-found|NOT_FOUND|database.*not exist/i.test(c)) return 'No existe la base Firestore. Créala en Firebase → Firestore Database.';
+  if (/not-found|NOT_FOUND|not exist|does not exist/i.test(c)) return 'No existe la base de datos Firestore. Créala en Firebase → Compilación → Firestore Database → Crear base de datos.';
+  if (/unavailable|failed-precondition|deadline/i.test(c)) return 'No se pudo conectar con Firestore. Verifica que creaste "Firestore Database" y tu conexión a internet.';
   return 'Error: ' + c;
 }
 function parseCfg(text) {
@@ -924,7 +969,8 @@ function renderSyncUI() {
   $('cfgState').textContent = cfg ? '✓ (' + cfg.projectId + ')' : '— pendiente';
   $('cfgState').style.color = cfg ? '#6ee7b7' : '#fcd34d';
   var on = !!Sync.room && !!cfg;
-  $('btnConnect').hidden = on && Sync.state !== 'error' && Sync.state !== 'off';
+  $('btnConnect').hidden = on && Sync.state !== 'error' && Sync.state !== 'off' && Sync.state !== 'connecting';
+  $('btnConnect').textContent = on && (Sync.state === 'error' || Sync.state === 'connecting') ? '🔄 Reintentar' : '🔗 Conectar';
   $('btnDisconnect').hidden = !Sync.room;
   $('inpClave').disabled = !!Sync.room && Sync.state !== 'error';
   if (Sync.room && document.activeElement !== $('inpClave')) $('inpClave').value = Sync.clave || Sync.room;
@@ -1078,7 +1124,7 @@ $('passForm').addEventListener('submit', function (e) {
     return;
   }
   if (okView) lsSet(LS.view, Date.now() + LOCK_MS);
-  if (okEdit) lsSet(LS.edit, Date.now() + LOCK_MS);
+  if (okEdit) { lsSet(LS.edit, Date.now() + LOCK_MS); Sync.signInEditor($('passInp').value.trim()); }
   var cb = passCb; closePass(); updateLockUI();
   toast(okEdit ? '🔓 Edición activada por 2 horas' : '👁 Acceso concedido');
   if (cb) cb();
@@ -1266,7 +1312,7 @@ function startEdit(id) {
   $('formTitle').textContent = '✏️ Editando registro';
   $('editId').value = r.id; $('inpName').value = r.name; $('inpAmount').value = r.amount; $('inpPaid').checked = !!r.paid;
   $('inpDate').value = r.date; $('dateHint').textContent = 'Fecha del registro: ' + fmtLong(r.date); $('dateHint').className = 'hint';
-  $('btnSubmit').textContent = '💾 Actualizar cambios'; $('btnCancel').hidden = false;
+  $('btnSubmit').textContent = '💾 Guardar'; $('btnCancel').hidden = false;
   $('inpAmount').focus();
 }
 
@@ -1309,7 +1355,7 @@ function activeFilters() {
   if (fltPicker.getState().t !== 'all') n++;
   if ($('fltDow').value !== 'ALL') n++;
   if ($('fltPaid').value !== 'ALL') n++;
-  if ($('fltSort').value !== 'dateDesc') n++;
+  if ($('fltSort').value !== 'entry') n++;
   return n;
 }
 $('btnFilter').addEventListener('click', function () { var fp = $('filterPanel'); fp.hidden = !fp.hidden; this.classList.toggle('on', !fp.hidden || activeFilters() > 0); });
@@ -1327,12 +1373,13 @@ function renderList() {
   var recs = filteredList(), sort = $('fltSort').value;
   var cmpDate = function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.createdAt - b.createdAt; };
   var sorters = {
+    entry: function (a, b) { return a.createdAt - b.createdAt || (a.id < b.id ? -1 : 1); },
     dateDesc: function (a, b) { return -cmpDate(a, b); }, dateAsc: cmpDate,
     amtDesc: function (a, b) { return b.amount - a.amount || -cmpDate(a, b); }, amtAsc: function (a, b) { return a.amount - b.amount || -cmpDate(a, b); },
     name: function (a, b) { return a.name.localeCompare(b.name, 'es') || -cmpDate(a, b); }
   };
   recs.sort(sorters[sort]);
-  var group = $('fltGroup').checked && (sort === 'dateDesc' || sort === 'dateAsc');
+  var group = $('fltGroup').checked && (sort === 'entry' || sort === 'dateDesc' || sort === 'dateAsc');
   var dayTot = {};
   if (group) recs.forEach(function (r) { var o = dayTot[r.date] || (dayTot[r.date] = { c: 0, t: 0 }); o.c++; o.t += r.amount; });
   var html = '', lastDate = null, shown = Math.min(recs.length, listLimit);
@@ -1356,7 +1403,7 @@ function renderList() {
 ['fltSearch', 'fltDow', 'fltPaid', 'fltSort', 'fltGroup'].forEach(function (id) { $(id).addEventListener(id === 'fltSearch' ? 'input' : 'change', function () { listLimit = 200; renderList(); }); });
 $('btnMore').addEventListener('click', function () { listLimit += 300; renderList(); });
 $('btnClearFlt').addEventListener('click', function () {
-  $('fltSearch').value = ''; $('fltDow').value = 'ALL'; $('fltPaid').value = 'ALL'; $('fltSort').value = 'dateDesc';
+  $('fltSearch').value = ''; $('fltDow').value = 'ALL'; $('fltPaid').value = 'ALL'; $('fltSort').value = 'entry';
   fltPicker.setType('all'); listLimit = 200; renderList();
 });
 $('btnListReport').addEventListener('click', function () {
@@ -1702,7 +1749,7 @@ $('btnGenRoom').addEventListener('click', function () { if (!$('inpClave').disab
 $('btnConnect').addEventListener('click', function () {
   if (!Sync.effCfg()) { $('cfgDetails').open = true; return toast('Primero completa el Paso 1 (Firebase)', 'err'); }
   var clave = $('inpClave').value.trim();
-  if (Sync.room && Sync.state === 'error') { Sync.start(); return; }
+  if (Sync.room && (Sync.state === 'error' || Sync.state === 'connecting')) { if (Sync.ready) Sync.listen(); else Sync.start(); toast('🔄 Reintentando…'); return; }
   if (norm(clave).length < 6) return toast('La clave debe tener al menos 6 caracteres', 'err');
   Sync.clave = clave; Sync.room = roomFromClave(clave); Sync.manualOff = false; Sync.save(); Sync.start();
   toast('🔗 Conectando con la clave del equipo…');
@@ -1724,7 +1771,7 @@ $('btnShareLink').addEventListener('click', function () {
   if (navigator.share) navigator.share({ title: 'Ofrenda y Donaciones', text: t }).catch(function () {});
   else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
 });
-window.addEventListener('online', function () { if (Sync.room && !Sync.ready) Sync.start(); else if (Sync.ready && Sync.state === 'offline') Sync.setState('connecting'); });
+window.addEventListener('online', function () { if (Sync.pendingPw) Sync.signInEditor(Sync.pendingPw); if (Sync.room && !Sync.ready) Sync.start(); else if (Sync.ready && Sync.state === 'offline') Sync.setState('connecting'); });
 window.addEventListener('offline', function () { if (Sync.room) Sync.setState('offline'); });
 
 /* ===================== INSTALACIÓN / ACTUALIZACIÓN ===================== */
@@ -1811,6 +1858,7 @@ fltPicker = makePicker('fltPeriod', 'flt', 'all', function () { listLimit = 200;
 sumPicker = makePicker('sumPeriod', 'sum', 'all', renderSummaries);
 repPicker = makePicker('repPeriod', 'rep', 'thisMonth', null);
 $('verLbl').textContent = 'Versión ' + APP_VERSION;
+$('fileWarn').hidden = /^https?:/.test(location.protocol);
 setDate(todayISO(), false);
 tickToday(); setInterval(tickToday, 30000);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) { tickToday(); updateLockUI(); scheduleRefresh(); } });

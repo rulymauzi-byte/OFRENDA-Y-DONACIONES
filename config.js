@@ -34,7 +34,7 @@ window.FIREBASE_CONFIG = {
 };
 
 // Clave del equipo: con esto todos los dispositivos se conectan solos.
-window.SYNC_CLAVE = 'ofrenda-tvbethel-8427';
+window.SYNC_CLAVE = 'roca-colabora-4303';
 
 // Usuario editor (debe existir en Firebase → Authentication → Usuarios)
 window.EDITOR_EMAIL = 'editor@ofrenda-tvbethel.com';
