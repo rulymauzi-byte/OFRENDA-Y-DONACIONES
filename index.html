@@ -680,7 +680,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '4.6.0';
+var APP_VERSION = '4.6.2';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -819,8 +819,10 @@ var Sync = {
           var appM = mods[0], authM = mods[1], fsM = mods[2];
           var app = appM.initializeApp(cfg);
           var db;
-          try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true, localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }); }
-          catch (e) { try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }); } catch (e2) { db = fsM.getFirestore(app); } }
+          var dbId = lsGet('COLAB_V4_DBID', '') || window.FIRESTORE_DB_ID || '(default)';
+          self.dbId = dbId;
+          try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true, localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }, dbId); }
+          catch (e) { try { db = fsM.initializeFirestore(app, { experimentalForceLongPolling: true }, dbId); } catch (e2) { db = fsM.getFirestore(app, dbId); } }
           self.fs = fsM; self.db = db; self.authM = authM; self.auth = authM.getAuth(app); self.appCfgKey = key;
         }
         if (self.auth.authStateReady) await self.auth.authStateReady();
@@ -855,6 +857,11 @@ var Sync = {
       self.setState('synced');
     }).catch(function (e) {
       console.error('diagnóstico', e);
+      // Si la base se creó con el nombre "default" (sin paréntesis), probar con ese nombre una vez
+      var other = self.dbId === '(default)' ? 'default' : '(default)';
+      if (/not-found|not exist|unavailable|timeout/i.test(String(e && (e.code || e.message))) && !lsGet('COLAB_V4_DBID_TRIED', false)) {
+        lsSet('COLAB_V4_DBID_TRIED', true); lsSet('COLAB_V4_DBID', other); location.reload(); return;
+      }
       self.setState('error', e && e.code === 'timeout'
         ? 'Firebase no responde. Revisa: 1) que creaste "Firestore Database" (no Realtime Database), 2) tu conexión a internet o antivirus. Luego toca Conectar.'
         : humanErr(e));

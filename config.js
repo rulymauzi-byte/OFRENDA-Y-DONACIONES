@@ -36,6 +36,9 @@ window.FIREBASE_CONFIG = {
 // Clave del equipo: con esto todos los dispositivos se conectan solos.
 window.SYNC_CLAVE = 'roca-colabora-4303';
 
+// Nombre de la base de datos Firestore (en tu proyecto se llama "default")
+window.FIRESTORE_DB_ID = 'default';
+
 // Usuario editor (debe existir en Firebase → Authentication → Usuarios)
 window.EDITOR_EMAIL = 'editor@ofrenda-tvbethel.com';
 
