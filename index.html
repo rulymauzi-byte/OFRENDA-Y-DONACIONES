@@ -706,7 +706,7 @@ select option{background:#0f172a;color:var(--text)}
       <div class="actions" style="margin-top:0">
         <button type="button" class="btn btn-primary" id="btnExport">⬇ Guardar copia (.json)</button>
         <button type="button" class="btn" id="btnExportCsv">⬇ Exportar a Excel (.csv)</button>
-        <input type="file" id="inpFile" accept=".json,application/json" hidden />
+        <input type="file" id="inpFile" hidden />
         <button type="button" class="btn" id="btnImport">⬆ Cargar copia</button>
         <button type="button" class="btn btn-danger" id="btnWipe">🗑 Borrar todo</button>
       </div>
@@ -771,7 +771,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '5.4.0';
+var APP_VERSION = '5.4.1';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -2025,7 +2025,8 @@ $('inpFile').addEventListener('change', function (e) {
   var reader = new FileReader();
   reader.onload = function (ev) {
     try {
-      var parsed = JSON.parse(ev.target.result);
+      var text = String(ev.target.result || '').replace(/^\ufeff/, '').trim(), parsed;
+      try { parsed = JSON.parse(text); } catch (je) { parsed = { records: parseCsvBackup(text) }; }   // si no es .json, probar como Excel (.csv)
       var arr = Array.isArray(parsed) ? parsed : (parsed.records || []);
       var incoming = arr.map(normalizeRecord).filter(function (r) { return r && !r.deleted; });
       if (!incoming.length) throw new Error('vacío');
@@ -2036,11 +2037,36 @@ $('inpFile').addEventListener('change', function (e) {
       if (Array.isArray(parsed.names)) { extraNames = Array.from(new Set(extraNames.concat(parsed.names))); lsSet(LS.names, extraNames); }
       commit(changes);
       toast('⬆ Copia cargada: ' + incoming.length + ' registros');
-    } catch (err) { toast('Archivo inválido', 'err'); }
+    } catch (err) { console.error(err); toast('✖ Ese archivo no es una copia de la app (.json o .csv)', 'err'); }
     e.target.value = '';
   };
   reader.readAsText(file);
 });
+/* Lee la copia exportada a Excel (.csv): No., Nombre, Fecha, Día, Mes, Año, Cantidad, Pagado */
+function parseCsvBackup(text) {
+  var rows = [], row = [], cell = '', q = false, i, ch;
+  var sep = (text.split('\n')[0].split(';').length > text.split('\n')[0].split(',').length) ? ';' : ',';
+  for (i = 0; i < text.length; i++) {
+    ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === sep) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  if (rows.length < 2) throw new Error('csv vacío');
+  var h = rows[0].map(function (x) { return norm(x); });
+  var cN = h.indexOf('nombre'), cF = h.indexOf('fecha'), cC = h.indexOf('cantidad'), cP = h.indexOf('pagado');
+  if (cN < 0 || cF < 0 || cC < 0) throw new Error('csv sin columnas');
+  return rows.slice(1).filter(function (r) { return r.length > cC && r[cN]; }).map(function (r, k) {
+    var f = String(r[cF]).trim(), m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(f);
+    if (m) f = m[3] + '-' + pad(+m[2]) + '-' + pad(+m[1]);
+    var amt = parseFloat(String(r[cC]).replace(/[^0-9.,-]/g, '').replace(',', '.')) || 0;
+    var name = String(r[cN]).trim();
+    return { id: 'csv_' + cyrb53(name + '|' + f + '|' + amt + '|' + k, 3), name: name, date: f, amount: amt, paid: cP >= 0 && /^s/i.test(norm(r[cP])), createdAt: 1e12 + k, updatedAt: 1e12 + k };
+  });
+}
 $('btnWipe').addEventListener('click', function () { requireEdit(wipeAllData); });
 function wipeAllData() {
   var recs = activeRecs(); if (!recs.length) return toast('No hay registros');
