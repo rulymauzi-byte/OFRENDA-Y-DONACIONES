@@ -59,6 +59,13 @@ Cada persona entra con su **Gmail** (Ajustes → **Entrar con Google**). Su list
 
 Al vencer o al quitarle el acceso, su app vuelve sola a su propia lista.
 
+### Entrar con correo y contraseña y administrador
+- En Ajustes cada persona entra con **Google** o con **correo y contraseña**. Quien entre con la misma cuenta ve la misma lista.
+- **Administrador:** mientras la cuenta no tenga administrador, aparece la opción **👑 Administrador**. Se activa con la contraseña de administrador (solo la sabes tú). Desde ese momento la opción **desaparece en todos los demás dispositivos** y solo el tuyo ve la lista de dispositivos.
+- **Quitar** un dispositivo cierra su sesión, borra los datos guardados en él y la nube ya no acepta sus registros.
+- Si pierdes el dispositivo administrador: en Firebase → Firestore → `lists` → tu cuenta → `meta` → borra el documento `admin`. La opción vuelve a aparecer una vez.
+- Para sacar a todos de golpe: cambia la contraseña de la cuenta en Firebase → Authentication → Usuarios.
+
 ## Actualizar la app
 
 Cuando cambies cualquier archivo, aumenta la versión en `sw.js` (por ejemplo `colab-v4.0.1`) y súbelo a GitHub. Los dispositivos instalados mostrarán **"Hay una nueva versión → Actualizar"**.

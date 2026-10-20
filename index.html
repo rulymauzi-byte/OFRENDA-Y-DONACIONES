@@ -159,6 +159,11 @@ body.paid-mode #btnFilter,body.paid-mode #filterPanel{display:none!important}
 .login-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--primary);background:rgba(59,130,246,.14);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.88rem}
 body:not([data-tab="0"]) .login-bar{display:none!important}
 
+.or{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:var(--muted);font-size:.8rem}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--border)}
+.dev-me{color:#6ee7b7;font-size:.72rem;font-weight:700}
+.dev-off{opacity:.6}
+
 /* DIAGNÓSTICO */
 .diag{border:1px solid var(--border);border-radius:12px;padding:12px;margin:12px 0}
 .diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
@@ -167,7 +172,7 @@ body:not([data-tab="0"]) .login-bar{display:none!important}
 
 /* AVISO: registros sin subir */
 .cloud-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #f59e0b;background:rgba(245,158,11,.14);color:#fde68a;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.88rem}
-body:not([data-tab="0"]):not([data-tab="1"]):not([data-tab="2"]) .cloud-bar{display:none!important}
+body:not([data-tab="0"]):not([data-tab="1"]):not([data-tab="2"]):not([data-tab="5"]) .cloud-bar{display:none!important}
 
 /* AVISO DE INSTALACIÓN (muy visible antes de instalar) */
 .install-bar{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#059669,#10b981 55%,#22c55e);border-radius:16px;padding:12px 14px;margin-bottom:14px;box-shadow:0 10px 26px rgba(16,185,129,.35);position:relative}
@@ -403,8 +408,12 @@ select option{background:#0f172a;color:var(--text)}
   </header>
 
   <div class="login-bar" id="loginBar" hidden>
-    <span>👤 Entra con tu Gmail para guardar tus datos en tu cuenta y verlos en tus otros dispositivos.</span>
+    <span>👤 Entra con tu cuenta (Gmail o correo y contraseña) para sincronizar tus datos.</span>
     <button type="button" class="btn btn-sm btn-primary" id="btnLoginBar">Entrar</button>
+  </div>
+  <div class="cloud-bar" id="mergeBar" hidden>
+    <span>📦 Hay <b id="mergeN">0</b> registros de otra cuenta guardados en este dispositivo.</span>
+    <button type="button" class="btn btn-sm btn-primary" id="btnMerge">Pasar a mi cuenta</button>
   </div>
   <div class="cloud-bar" id="cloudBar" hidden>
     <span>☁ <b id="cloudN">0</b> registros están solo en este dispositivo.</span>
@@ -596,8 +605,17 @@ select option{background:#0f172a;color:var(--text)}
       <div class="card-h"><h2>👤 Cuenta y sincronización</h2><button type="button" class="sync-chip" id="syncChip2" data-state="off"><span class="dot"></span><span class="txt">Solo este dispositivo</span></button></div>
 
       <div id="accOut">
-        <p class="muted small" style="margin-bottom:12px">Entra con tu cuenta de <b>Gmail</b>. Tus datos se guardan en tu cuenta: solo tú y las personas que tú invites pueden verlos. Entra con el mismo Gmail en tu celular y en tu PC para tener la misma lista.</p>
+        <p class="muted small" style="margin-bottom:12px">Entra con Google o con tu correo y contraseña. Usa la misma cuenta en tu celular y en tu PC para tener la misma lista.</p>
         <button type="button" class="btn btn-google" id="btnGoogle"><span class="g">G</span> Entrar con Google</button>
+        <div class="or"><span>o con correo y contraseña</span></div>
+        <form id="pwForm" autocomplete="on">
+          <div class="field" style="margin-bottom:8px"><input type="email" id="inpEmail" placeholder="Correo" autocomplete="username" /></div>
+          <div class="field pass-wrap" style="margin-bottom:8px"><input type="password" id="inpPw" placeholder="Contraseña" autocomplete="current-password" /><button type="button" id="pwEye" aria-label="Mostrar">👁</button></div>
+          <button type="submit" class="btn btn-primary" style="width:100%" id="btnPwLogin">Entrar</button>
+        </form>
+        <p class="muted small" style="text-align:center;margin-top:10px"><a href="#" id="lnkForgot" style="color:#93c5fd">Olvidé mi contraseña</a></p>
+        <p class="muted small" style="text-align:center;margin-top:6px">¿No tienes cuenta? <a href="#" id="lnkSignup" style="color:#93c5fd">Crear cuenta con correo y contraseña</a></p>
+        <p class="muted small" style="margin-top:8px;color:#fcd34d">⚠ Guarda bien tu contraseña. Si la olvidas, solo podrás cambiarla con "Olvidé mi contraseña", y eso funciona únicamente si tu correo es real, porque te llega un mensaje a ese correo.</p>
       </div>
 
       <div id="accIn" hidden>
@@ -627,6 +645,27 @@ select option{background:#0f172a;color:var(--text)}
             </div>
           </div>
           <div id="accessList" style="margin-top:12px"></div>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label for="inpDevName">Nombre de este dispositivo</label>
+          <div class="date-ctrl"><input type="text" id="inpDevName" placeholder="Ej. Celular de Raúl" /><button type="button" class="btn" id="btnDevName">Guardar</button></div>
+        </div>
+
+        <div id="devBox" hidden>
+          <div id="adminOff" hidden>
+            <h3>👑 Administrador</h3>
+            <div class="date-ctrl" style="margin-top:6px">
+              <input type="password" id="inpAdminPw" placeholder="Contraseña de administrador" autocomplete="off" />
+              <button type="button" class="btn btn-primary" id="btnAdmin">Activar</button>
+            </div>
+          </div>
+          <div id="adminOn" hidden>
+            <h3>📱 Dispositivos conectados a esta cuenta</h3>
+            <p class="ok-box" style="margin:0 0 8px">👑 Este dispositivo es el administrador.</p>
+            <div id="devList"></div>
+            <button type="button" class="btn btn-sm" id="btnAdminOut" style="margin-top:8px">Dejar de ser administrador</button>
+          </div>
         </div>
 
         <h3>🔑 Unirme a la lista de otra persona</h3>
@@ -732,7 +771,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '5.0.0';
+var APP_VERSION = '5.4.0';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -917,7 +956,15 @@ var Sync = {
       throw e;
     }
   },
+  signInPassword: async function (email, pw) {
+    await this.load();
+    var res = await this.authM.signInWithEmailAndPassword(this.auth, email, pw);
+    await this.onUser(res.user);
+  },
   signOut: async function () {
+    if (this.devUnsub) this.devUnsub();
+    if (this.admUnsub) this.admUnsub();
+    this.devUnsub = null; this.admUnsub = null; this.adminDev = undefined;
     if (this.unsub) this.unsub();
     this.unsub = null; this.ready = false; this.col = null; this.user = null; this.lists = [];
     try { await this.authM.signOut(this.auth); } catch (e) {}
@@ -927,12 +974,49 @@ var Sync = {
     var fs = this.fs, self = this;
     this.user = u;
     fs.setDoc(fs.doc(this.db, 'lists', u.uid), { ownerEmail: u.email || '', ownerName: u.displayName || '', updatedAt: Date.now() }, { merge: true }).catch(function (e) { console.warn(e); });
+    var ok = await this.registerDevice();
+    if (!ok) return;                                   // este dispositivo está bloqueado
     var pend = pendingInvite();
     if (pend) { try { await this.joinCode(pend, true); } catch (e) { toast('✖ ' + (e.message || humanErr(e)), 'err'); } clearPendingInvite(); }
     await this.loadLists();
     var target = this.lists.some(function (l) { return l.id === self.listId; }) ? this.listId : u.uid;
     this.switchList(target);
   },
+  /* ---- Dispositivos de la cuenta (para que el administrador pueda quitar a otros) ---- */
+  devRef: function () { return this.fs.doc(this.db, 'lists', this.user.uid, 'devices', deviceId()); },
+  registerDevice: async function () {
+    var fs = this.fs, self = this, ref = this.devRef(), snap = null;
+    try { snap = await fs.getDoc(ref); } catch (e) { console.warn(e); }
+    if (snap && snap.exists() && snap.data().blocked) { await this.blockedOut(); return false; }
+    var base = { name: deviceName(), ua: navigator.userAgent.slice(0, 160), lastSeen: Date.now(), blocked: false };
+    if (!snap || !snap.exists()) base.firstSeen = Date.now();
+    try { await fs.setDoc(ref, base, { merge: true }); } catch (e) { console.warn(e); }
+    if (this.devUnsub) this.devUnsub();
+    this.devUnsub = fs.onSnapshot(ref, function (d) { if (d.exists && d.exists() && d.data().blocked) self.blockedOut(); }, function () {});
+    this.adminDev = undefined;
+    if (this.admUnsub) this.admUnsub();
+    this.admUnsub = fs.onSnapshot(this.adminRef(), function (d) {
+      self.adminDev = (d.exists && d.exists()) ? (d.data().deviceId || null) : null;
+      renderAccount();
+    }, function () { self.adminDev = null; });
+    clearInterval(this.seenTimer);
+    this.seenTimer = setInterval(function () { if (self.user) fs.setDoc(self.devRef(), { lastSeen: Date.now() }, { merge: true }).catch(function () {}); }, 5 * 60 * 1000);
+    return true;
+  },
+  blockedOut: async function () {
+    var key = this.user ? dataKey(this.user.uid) : null;
+    try { if (key) localStorage.removeItem(key); localStorage.removeItem(LS.data); } catch (e) {}
+    DB = {}; scheduleRefresh();
+    await this.signOut();
+    alert('🔒 El administrador quitó el acceso de este dispositivo a la cuenta.');
+  },
+  listDevices: async function () {
+    var r = await this.fs.getDocs(this.fs.collection(this.db, 'lists', this.user.uid, 'devices'));
+    return r.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+  },
+  setDeviceBlocked: function (id, blocked) { return this.fs.setDoc(this.fs.doc(this.db, 'lists', this.user.uid, 'devices', id), { blocked: blocked, blockedAt: Date.now() }, { merge: true }); },
+  renameDevice: function (name) { return this.fs.setDoc(this.devRef(), { name: name }, { merge: true }); },
+  adminRef: function () { return this.fs.doc(this.db, 'lists', this.user.uid, 'meta', 'admin'); },
   loadLists: async function () {
     var fs = this.fs, u = this.user, out = [{ id: u.uid, email: u.email, own: true }];
     try {
@@ -947,7 +1031,7 @@ var Sync = {
     this.unsub = null; this.listId = id; this.save();
     this.sent = {}; this.cloudCount = null; this.pendingCount = 0;
     useLocalList(id, this.user && this.user.uid);
-    this.listen(); renderAccount(); scheduleRefresh();
+    this.listen(); renderAccount(); scheduleRefresh(); checkLocalLeftovers();
   },
   listen: function () {
     var self = this, fs = this.fs;
@@ -999,7 +1083,7 @@ var Sync = {
     this.loadLists().then(function () { self.switchList(self.user.uid); });
     return true;
   },
-  docData: function (r) { return { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted }; },
+  docData: function (r) { return { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted, dev: deviceId() }; },
   push: function (recs) {
     if (!this.ready || !this.col || !recs.length) return;
     var fs = this.fs, self = this;
@@ -1061,6 +1145,20 @@ var Sync = {
     toast('✔ Te uniste a la lista de ' + (inv.ownerEmail || 'otra persona'));
   }
 };
+function deviceId() {
+  var id = lsGet('COLAB_DEVICE_ID', '');
+  if (!id) { var a = new Uint32Array(4); crypto.getRandomValues(a); id = 'd' + Array.from(a).map(function (x) { return x.toString(36); }).join(''); lsSet('COLAB_DEVICE_ID', id); }
+  return id;
+}
+function deviceName() {
+  var n = lsGet('COLAB_DEVICE_NAME', ''); if (n) return n;
+  var ua = navigator.userAgent, os = /android/i.test(ua) ? 'Android' : /iphone|ipad/i.test(ua) ? 'iPhone' : /windows/i.test(ua) ? 'PC Windows' : /mac/i.test(ua) ? 'Mac' : 'Dispositivo';
+  var br = /edg\//i.test(ua) ? 'Edge' : /chrome|crios/i.test(ua) ? 'Chrome' : /safari/i.test(ua) ? 'Safari' : /firefox/i.test(ua) ? 'Firefox' : '';
+  return os + (br ? ' · ' + br : '');
+}
+var ADMIN_HASH = '3315ea2c88954fc810196c7a7543f014baf3ae8c1b03b956';   // huella de la contraseña de administrador
+function isAdminHere() { return !!(Sync.user && Sync.adminDev && Sync.adminDev === deviceId()); }
+function adminHash(pw) { var k = 'admin|' + String(pw); return cyrb53(k, 5) + cyrb53(k, 17) + cyrb53(k, 29); }
 function genCode() {
   var A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', a = new Uint32Array(7), s = '';
   crypto.getRandomValues(a);
@@ -1095,6 +1193,38 @@ $('btnSendAll').addEventListener('click', async function () {
   catch (e) { renderDiag('✖ No se pudo enviar: ' + (e.code === 'timeout' ? 'el servidor no respondió (revisa internet).' : (e.code ? humanErr(e) : e.message)), true); }
   b.disabled = false;
 });
+/* Datos que quedaron en este dispositivo de otras cuentas (p. ej. la cuenta editor anterior) */
+var leftovers = [];
+function checkLocalLeftovers() {
+  leftovers = [];
+  if (!Sync.user || !Sync.isOwnList()) { $('mergeBar').hidden = true; return; }
+  var joined = {}; (Sync.lists || []).forEach(function (l) { joined[dataKey(l.id)] = 1; });
+  var keys = [];
+  try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf('COLAB_V5_DATA_') === 0 && k !== curKey && !joined[k]) keys.push(k); } } catch (e) {}
+  if (lsGet(LS.data, null)) keys.push(LS.data);
+  var found = {};
+  keys.forEach(function (k) {
+    var d = lsGet(k, {}) || {};
+    Object.keys(d).forEach(function (id) {
+      var r = d[id]; if (!r || r.deleted) return;
+      var mine = DB[id];
+      if (!mine || (!mine.deleted && (r.updatedAt || 0) > (mine.updatedAt || 0))) { if (!found[id] || (r.updatedAt || 0) > (found[id].updatedAt || 0)) found[id] = r; }
+    });
+  });
+  leftovers = Object.keys(found).map(function (id) { return found[id]; });
+  leftovers.keys = keys;
+  $('mergeBar').hidden = !leftovers.length; $('mergeN').textContent = leftovers.length;
+}
+$('btnMerge').addEventListener('click', function () {
+  if (!leftovers.length) return;
+  if (!confirm('¿Pasar ' + leftovers.length + ' registros guardados en este dispositivo a tu cuenta ' + (Sync.user && Sync.user.email) + '?\n\nSe unen con los que ya tienes y se envían a la nube.')) return;
+  var recs = leftovers.map(function (r) { var x = normalizeRecord(r); return x; }).filter(Boolean);
+  var keys = leftovers.keys || [];
+  commit(recs);
+  keys.forEach(function (k) { var d = lsGet(k, null); if (d) { lsSet('COLAB_V5_RESPALDO_' + k.replace('COLAB_V5_DATA_', ''), d); try { localStorage.removeItem(k); } catch (e) {} } });
+  leftovers = []; $('mergeBar').hidden = true;
+  toast('✔ ' + recs.length + ' registros pasados a tu cuenta');
+});
 function updateCloudBar() {
   var show = !!Sync.user && (Sync.pendingCount || 0) > 0;
   $('cloudBar').hidden = !show; $('cloudN').textContent = Sync.pendingCount || 0;
@@ -1102,7 +1232,7 @@ function updateCloudBar() {
 function humanErr(e) {
   var c = String((e && (e.code || e.message)) || e);
   if (/unauthorized-domain/i.test(c)) return 'Falta autorizar el dominio: Firebase → Authentication → Configuración → Dominios autorizados → agrega ' + location.hostname;
-  if (/operation-not-allowed|admin-restricted/i.test(c)) return 'Activa "Google" en Firebase → Authentication → Método de acceso.';
+  if (/operation-not-allowed|admin-restricted/i.test(c)) return 'Activa "Google" y "Correo electrónico/contraseña" en Firebase → Authentication → Método de acceso.';
   if (/permission-denied|insufficient permissions/i.test(c)) return 'Permiso denegado. Revisa que publicaste las reglas nuevas de firestore.rules en Firestore Database.';
   if (/api-key|invalid-api-key|API key/i.test(c)) return 'La configuración de Firebase no es válida (apiKey). Vuelve a copiarla.';
   if (/Failed to fetch|import|dynamically imported/i.test(c)) return 'No se pudo cargar Firebase. Revisa tu conexión a internet.';
@@ -1155,8 +1285,26 @@ function renderAccount() {
   }).join('');
   $('selList').value = Sync.listId;
   $('ownBox').hidden = !Sync.isOwnList();
+  if (document.activeElement !== $('inpDevName')) $('inpDevName').value = deviceName();
+  var adm = isAdminHere(), noAdmin = Sync.adminDev === null;
+  $('devBox').hidden = !Sync.isOwnList() || !(adm || noAdmin);
+  $('adminOff').hidden = adm || !noAdmin; $('adminOn').hidden = !adm;
+  if (adm && $('tab5').classList.contains('active')) renderDevices();
   renderDiag(null);
   if (Sync.isOwnList() && $('tab5').classList.contains('active')) renderAccess();
+}
+async function renderDevices() {
+  if (!Sync.user || !isAdminHere()) return;
+  var list = [];
+  try { list = await Sync.listDevices(); } catch (e) { $('devList').innerHTML = '<p class="err">' + esc(humanErr(e)) + '</p>'; return; }
+  list.sort(function (a, b) { return (b.lastSeen || 0) - (a.lastSeen || 0); });
+  var me = deviceId();
+  $('devList').innerHTML = list.map(function (d) {
+    var mine = d.id === me;
+    return '<div class="acc-item' + (d.blocked ? ' dev-off' : '') + '"><div>' + esc(d.name || 'Dispositivo') + (mine ? ' <span class="dev-me">(este)</span>' : '') + (d.admin ? ' 👑' : '') +
+      '<small>' + (d.blocked ? '🔒 Bloqueado' : 'Última vez: ' + (d.lastSeen ? fmtWhen(d.lastSeen) : '—')) + '</small></div>' +
+      (mine ? '' : (d.blocked ? '<button type="button" class="btn btn-sm" data-unblock="' + esc(d.id) + '">Permitir</button>' : '<button type="button" class="btn btn-sm btn-danger" data-block="' + esc(d.id) + '">Quitar</button>')) + '</div>';
+  }).join('') || '<p class="muted small">No hay dispositivos.</p>';
 }
 async function renderAccess() {
   if (!Sync.user || !Sync.isOwnList()) return;
@@ -1926,7 +2074,65 @@ async function doLogin() {
   finally { $('btnGoogle').disabled = false; }
 }
 $('btnGoogle').addEventListener('click', doLogin);
-$('btnLoginBar').addEventListener('click', function () { switchTab(5); doLogin(); });
+
+$('lnkSignup').addEventListener('click', async function (e) {
+  e.preventDefault();
+  var em = $('inpEmail').value.trim(), pw = $('inpPw').value;
+  if (!em || pw.length < 6) return toast('Escribe tu correo y una contraseña de al menos 6 caracteres, y vuelve a tocar "Crear cuenta"', 'err');
+  if (!confirm('⚠ IMPORTANTE: guarda bien tu contraseña.\n\nCorreo: ' + em + '\n\nSi la olvidas, solo podrás cambiarla con "Olvidé mi contraseña", y eso solo funciona si este correo es real (te llega un mensaje).\n\n¿Crear la cuenta?')) return;
+  try { await Sync.load(); var res = await Sync.authM.createUserWithEmailAndPassword(Sync.auth, em, pw); await Sync.onUser(res.user); $('inpPw').value = ''; toast('✔ Cuenta creada: ' + em); }
+  catch (err) { var c = String(err && err.code); toast(/email-already-in-use/.test(c) ? '✖ Ese correo ya tiene cuenta: toca Entrar' : /invalid-email/.test(c) ? '✖ Correo no válido' : /weak-password/.test(c) ? '✖ La contraseña es muy corta' : '✖ ' + humanErr(err), 'err'); }
+});
+$('lnkForgot').addEventListener('click', async function (e) {
+  e.preventDefault();
+  var em = $('inpEmail').value.trim();
+  if (!em) { $('inpEmail').focus(); return toast('Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña"', 'err'); }
+  try {
+    await Sync.load(); Sync.auth.languageCode = 'es';
+    await Sync.authM.sendPasswordResetEmail(Sync.auth, em);
+    alert('Te enviamos un mensaje a ' + em + ' para crear una contraseña nueva.\n\nRevisa también la carpeta de spam o correo no deseado.');
+  } catch (err) { var c = String(err && err.code); toast(/invalid-email/.test(c) ? '✖ Correo no válido' : /user-not-found/.test(c) ? '✖ No hay ninguna cuenta con ese correo' : '✖ ' + humanErr(err), 'err'); }
+});
+$('pwEye').addEventListener('click', function () { var i = $('inpPw'); i.type = i.type === 'password' ? 'text' : 'password'; });
+$('pwForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  var em = $('inpEmail').value.trim(), pw = $('inpPw').value;
+  if (!em || !pw) return toast('Escribe el correo y la contraseña', 'err');
+  $('btnPwLogin').disabled = true;
+  try { await Sync.signInPassword(em, pw); $('inpPw').value = ''; toast('✔ Entraste como ' + em); }
+  catch (err) { var c = String(err && err.code); toast(/invalid-credential|wrong-password|user-not-found|invalid-login|invalid-email/i.test(c) ? '✖ Correo o contraseña incorrectos' : '✖ ' + humanErr(err), 'err'); }
+  $('btnPwLogin').disabled = false;
+});
+$('btnDevName').addEventListener('click', function () {
+  var n = $('inpDevName').value.trim().slice(0, 40); if (!n) return;
+  lsSet('COLAB_DEVICE_NAME', n); Sync.renameDevice(n).catch(function () {}); toast('✔ Nombre guardado');
+});
+$('btnAdmin').addEventListener('click', async function () {
+  var pw = $('inpAdminPw').value;
+  if (adminHash(pw) !== ADMIN_HASH) { $('inpAdminPw').select(); return toast('✖ Contraseña incorrecta', 'err'); }
+  try {
+    var ref = Sync.adminRef(), d = await Sync.fs.getDoc(ref);
+    if (d.exists() && d.data().deviceId && d.data().deviceId !== deviceId()) { Sync.adminDev = d.data().deviceId; renderAccount(); return toast('Ya hay un administrador en otro dispositivo', 'err'); }
+    await Sync.fs.setDoc(ref, { deviceId: deviceId(), name: deviceName(), since: Date.now() });
+    Sync.fs.setDoc(Sync.devRef(), { admin: true }, { merge: true }).catch(function () {});
+    Sync.adminDev = deviceId(); $('inpAdminPw').value = '';
+    toast('👑 Este dispositivo es el administrador'); renderAccount();
+  } catch (e) { toast('✖ ' + humanErr(e), 'err'); }
+});
+$('btnAdminOut').addEventListener('click', async function () {
+  if (!confirm('¿Dejar de ser administrador? El botón de administrador volverá a aparecer en todos los dispositivos de la cuenta hasta que alguien lo active con la contraseña.')) return;
+  try { await Sync.fs.deleteDoc(Sync.adminRef()); Sync.fs.setDoc(Sync.devRef(), { admin: false }, { merge: true }).catch(function () {}); Sync.adminDev = null; renderAccount(); }
+  catch (e) { toast('✖ ' + humanErr(e), 'err'); }
+});
+$('devList').addEventListener('click', async function (e) {
+  var bl = e.target.closest('[data-block]'), ub = e.target.closest('[data-unblock]');
+  try {
+    if (bl && confirm('¿Quitar este dispositivo? Se cerrará su sesión y se borrarán los datos guardados en él.')) { await Sync.setDeviceBlocked(bl.dataset.block, true); toast('🔒 Dispositivo quitado'); }
+    if (ub) { await Sync.setDeviceBlocked(ub.dataset.unblock, false); toast('✔ Dispositivo permitido otra vez'); }
+  } catch (err) { toast('✖ ' + humanErr(err), 'err'); }
+  renderDevices();
+});
+$('btnLoginBar').addEventListener('click', function () { switchTab(5); setTimeout(function () { $('accOut').scrollIntoView({ behavior: 'smooth' }); }, 80); });
 $('btnSignOut').addEventListener('click', function () {
   if (!confirm('¿Salir de tu cuenta en este dispositivo? Los datos se quedan guardados aquí.')) return;
   Sync.signOut();

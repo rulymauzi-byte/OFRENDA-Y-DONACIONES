@@ -13,6 +13,13 @@ service cloud.firestore {
              && get(memberPath(owner)).data.expiresAt > request.time.toMillis();
     }
     function invite(code) { return get(/databases/$(database)/documents/invites/$(code)).data; }
+    // El dispositivo que escribe debe estar registrado y no bloqueado por el administrador
+    function devPath(owner, dev) { return /databases/$(database)/documents/lists/$(owner)/devices/$(dev); }
+    function devOk(owner) {
+      return request.resource.data.dev is string
+             && exists(devPath(owner, request.resource.data.dev))
+             && get(devPath(owner, request.resource.data.dev)).data.blocked != true;
+    }
 
     // Lista de cada cuenta
     match /lists/{owner} {
@@ -21,7 +28,16 @@ service cloud.firestore {
 
       // Registros: el dueño y los invitados con acceso vigente
       match /records/{id} {
-        allow read, write: if isOwner(owner) || isMember(owner);
+        allow read: if isOwner(owner) || isMember(owner);
+        allow write: if (isOwner(owner) && devOk(owner)) || isMember(owner);
+      }
+
+      // Dispositivos de la cuenta y datos del administrador
+      match /devices/{dev} {
+        allow read, write: if isOwner(owner);
+      }
+      match /meta/{doc} {
+        allow read, write: if isOwner(owner);
       }
 
       // Invitados: el dueño los ve y los quita; cada invitado se agrega a sí mismo con un código válido
