@@ -384,7 +384,7 @@ select option{background:#0f172a;color:var(--text)}
 
   <div class="cloud-bar" id="cloudBar" hidden>
     <span>☁ <b id="cloudN">0</b> registros están solo en este dispositivo.</span>
-    <button type="button" class="btn btn-sm btn-primary" id="btnCloudUp">Subir a la nube</button>
+    <button type="button" class="btn btn-sm btn-primary" id="btnCloudUp">Enviar ahora</button>
   </div>
 
   <div class="install-bar" id="installBar" hidden>
@@ -689,7 +689,7 @@ select option{background:#0f172a;color:var(--text)}
 
 <script>
 'use strict';
-var APP_VERSION = '4.7.0';
+var APP_VERSION = '4.8.0';
 /* Contraseñas (guardadas como huella, no en texto): edición = "tvbethel.com123", ver = "tvbethel" */
 var EDIT_HASH = 'f7b654ebab8d2b634a552023af6e81b2958413a1d0774956';
 var VIEW_HASH = '041fbc5c1ae4d0f599e866f0d9d8c8bfb62d1dd6b6c55ea6';
@@ -796,10 +796,6 @@ function commit(recs) {            // guarda local + envía a la nube
   });
   saveLocal();
   Sync.push(recs);
-  if (Sync.ready && !Sync.isEditor() && window.EDITOR_EMAIL) {
-    Sync.pendingCount = (Sync.pendingCount || 0) + recs.length; updateCloudBar();
-    if (!Sync.askedUp) { Sync.askedUp = true; setTimeout(function () { openPass('edit', null, 'Escribe la contraseña para subir tus registros a la nube y que lleguen a los otros dispositivos.'); }, 400); }
-  }
   scheduleRefresh();
 }
 function removeRec(id) { var r = DB[id]; if (!r) return; var c = Object.assign({}, r, { deleted: true }); commit([c]); }
@@ -890,18 +886,18 @@ var Sync = {
       var l = DB[r.id];
       if (!l || r.updatedAt > (l.updatedAt || 0)) { DB[r.id] = r; changed = true; }
     });
-    if (!this.reconciled && !snap.metadata.fromCache && this.isEditor()) {   // primera respuesta del servidor: el editor sube lo local que falte o sea más nuevo
+    if (!snap.metadata.fromCache) {   // cada respuesta del servidor: revisar la memoria y enviar lo que falte o sea más nuevo
       this.reconciled = true;
       var remote = {};
       snap.docs.forEach(function (d) { remote[d.id] = Number(d.data().updatedAt) || 0; });
       var up = [];
-      for (var k in DB) if (!(k in remote) || (DB[k].updatedAt || 0) > remote[k]) up.push(DB[k]);
+      var sent = this.sent || (this.sent = {});
+      for (var k in DB) {
+        var mine = DB[k].updatedAt || 0;
+        if ((!(k in remote) || mine > remote[k]) && sent[k] !== mine) { up.push(DB[k]); sent[k] = mine; }
+      }
+      this.pendingCount = up.length; updateCloudBar();
       if (up.length) this.push(up);
-    }
-    if (!snap.metadata.fromCache) {
-      var rem = {}; snap.docs.forEach(function (d) { rem[d.id] = Number(d.data().updatedAt) || 0; });
-      var n = 0; for (var k2 in DB) if (!(k2 in rem) ? !DB[k2].deleted : (DB[k2].updatedAt || 0) > rem[k2]) n++;
-      this.pendingCount = n; updateCloudBar();
     }
     if (changed) { saveLocal(); scheduleRefresh(); }
     if (!navigator.onLine || snap.metadata.fromCache) this.setState(snap.metadata.hasPendingWrites ? 'offline' : (navigator.onLine ? 'connecting' : 'offline'));
@@ -927,14 +923,14 @@ var Sync = {
   },
   push: function (recs) {
     if (!this.ready || !this.col || !recs.length) return;
-    if (!this.isEditor()) return;                                          // se subirá al conectar como editor
     var fs = this.fs, self = this;
     for (var i = 0; i < recs.length; i += 400) {
       var b = fs.writeBatch(this.db);
       recs.slice(i, i + 400).forEach(function (r) {
         b.set(fs.doc(self.col, r.id), { name: r.name, amount: r.amount, date: r.date, paid: !!r.paid, createdAt: r.createdAt, updatedAt: r.updatedAt, deleted: !!r.deleted });
       });
-      b.commit().catch(function (e) { console.error(e); self.setState('error', humanErr(e)); });
+      b.commit().then(function () { self.pendingCount = 0; updateCloudBar(); })
+        .catch(function (e) { console.error(e); self.sent = {}; self.setState('error', humanErr(e)); updateCloudBar(); });
     }
   },
   stop: function () {
@@ -943,7 +939,7 @@ var Sync = {
   }
 };
 function updateCloudBar() {
-  var show = Sync.ready && !Sync.isEditor() && (Sync.pendingCount || 0) > 0;
+  var show = Sync.state === 'error' && (Sync.pendingCount || 0) > 0;
   $('cloudBar').hidden = !show; $('cloudN').textContent = Sync.pendingCount || 0;
 }
 function humanErr(e) {
@@ -1174,7 +1170,7 @@ $('lockChip').addEventListener('click', function () {
   if (canEdit()) { if (confirm('¿Bloquear la edición ahora en este dispositivo?')) { lsSet(LS.edit, 0); updateLockUI(); } }
   else openPass('edit', function () { switchTab(1); });
 });
-$('btnCloudUp').addEventListener('click', function () { openPass('edit', null, 'Escribe la contraseña de edición para subir tus registros a la nube.'); });
+$('btnCloudUp').addEventListener('click', function () { Sync.sent = {}; if (Sync.ready) Sync.listen(); else Sync.start(); toast('☁ Enviando…'); });
 $('btnUnlock').addEventListener('click', function () { openPass('edit', function () { $('inpName').focus(); }); });
 function viewGate() {
   if (!window.PEDIR_CLAVE_PARA_VER) return;
@@ -1801,7 +1797,7 @@ $('btnShareLink').addEventListener('click', function () {
   if (navigator.share) navigator.share({ title: 'Ofrenda y Donaciones', text: t }).catch(function () {});
   else window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
 });
-window.addEventListener('online', function () { if (Sync.pendingPw) Sync.signInEditor(Sync.pendingPw); if (Sync.room && !Sync.ready) Sync.start(); else if (Sync.ready && Sync.state === 'offline') Sync.setState('connecting'); });
+window.addEventListener('online', function () { Sync.sent = {}; if (Sync.ready) Sync.listen(); if (Sync.pendingPw) Sync.signInEditor(Sync.pendingPw); if (Sync.room && !Sync.ready) Sync.start(); else if (Sync.ready && Sync.state === 'offline') Sync.setState('connecting'); });
 window.addEventListener('offline', function () { if (Sync.room) Sync.setState('offline'); });
 
 /* ===================== INSTALACIÓN / ACTUALIZACIÓN ===================== */
@@ -1891,7 +1887,7 @@ $('verLbl').textContent = 'Versión ' + APP_VERSION;
 $('fileWarn').hidden = /^https?:/.test(location.protocol);
 setDate(todayISO(), false);
 tickToday(); setInterval(tickToday, 30000);
-document.addEventListener('visibilitychange', function () { if (!document.hidden) { tickToday(); updateLockUI(); scheduleRefresh(); } });
+document.addEventListener('visibilitychange', function () { if (!document.hidden) { if (Sync.ready && Sync.state !== 'synced') Sync.listen(); tickToday(); updateLockUI(); scheduleRefresh(); } });
 updateLockUI(); setInterval(updateLockUI, 20000);
 refreshAll();
 renderSyncUI();
